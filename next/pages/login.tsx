@@ -12,4 +12,6 @@ const Login = ({ user }) => {
     );
 };
 
+Login.pageName = "Login";
+
 export default Login;

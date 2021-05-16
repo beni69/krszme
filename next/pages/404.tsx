@@ -8,4 +8,6 @@ const page404 = () => {
     );
 };
 
+page404.pageName = "Not Found";
+
 export default page404;

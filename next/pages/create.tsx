@@ -9,4 +9,6 @@ const Create = () => {
     );
 };
 
+Create.pageName = "Create a link";
+
 export default Create;

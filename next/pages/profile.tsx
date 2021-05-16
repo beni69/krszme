@@ -27,4 +27,6 @@ const Profile = ({ user }) => {
     );
 };
 
+Profile.pageName = "Profile";
+
 export default Profile;
