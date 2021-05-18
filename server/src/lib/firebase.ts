@@ -7,6 +7,7 @@ export const app = admin.apps.length ? admin.app() : initApp();
 export const auth = app.auth();
 
 export async function verifyUser(t: string) {
+    if (!t) return null;
     return await auth.verifyIdToken(t).catch(err => {
         console.error(err);
         return null;

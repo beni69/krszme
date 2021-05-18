@@ -7,15 +7,14 @@ import helmet from "helmet";
 import morgan from "morgan";
 import api from "./api";
 import ApiError from "./lib/ApiError";
-import { connect, url, Url } from "./lib/mongoose";
+import { connect as connectDB, url, Url } from "./lib/mongoose";
 import log from "./lib/requestLog";
 
 configENV();
 
 const app = express();
 
-const { MONGODB } = process.env;
-if (MONGODB) connect(MONGODB);
+connectDB();
 
 //* middleware
 app.use(express.json());
@@ -36,7 +35,7 @@ const PORT = process.env.PORT || 8080;
 app.get("/", (req, res) => {
     res.redirect("//app.krsz.me");
 });
-app.get("/test", (req, res) => {
+app.all("/test", (req, res) => {
     const { body, params, query, cookies, ip, path } = req;
     res.json({ body, params, query, cookies, ip, path });
 });

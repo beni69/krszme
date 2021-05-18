@@ -1,7 +1,18 @@
 import chalk from "chalk";
 import mongoose, { model, Schema } from "mongoose";
+import { getSecret } from "./secretManager";
 
-export async function connect(uri: string) {
+const PROD = process.env.NODE_ENV == "production";
+
+export async function connect() {
+    const uri: string = (
+        PROD
+            ? await getSecret(
+                  "projects/1002758976981/secrets/MONGODB/versions/latest"
+              )
+            : process.env.MONGODB
+    ) as string;
+
     try {
         await mongoose.connect(uri, {
             useNewUrlParser: true,
