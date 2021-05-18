@@ -1,21 +1,11 @@
-import {
-    Box,
-    Heading,
-    Stack,
-    HStack,
-    Text,
-    VStack,
-    Flex,
-    Button,
-    FormControl,
-} from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import Card from "../components/card";
 import ShortenerForm from "../components/shortenerForm";
 
 export default function Home({ user }) {
     return (
         <Box as="main" h="100%">
-            <VStack as="title" m={28}>
+            <VStack m={28}>
                 <Heading as="h1" fontSize="6xl">
                     krsz.me
                 </Heading>

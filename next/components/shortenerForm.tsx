@@ -1,74 +1,121 @@
-import {
-    Button,
-    FormControl,
-    FormErrorMessage,
-    FormLabel,
-    Input,
-    InputProps,
-} from "@chakra-ui/react";
-import { Field, Form, Formik } from "formik";
+import { Box, ButtonGroup, useToast, Link } from "@chakra-ui/react";
+import { Formik, FormikHelpers } from "formik";
+import { InputControl, SubmitButton } from "formik-chakra-ui";
 import * as Yup from "yup";
-
-const EpicField = ({ label, ...props }: { label: string } & InputProps) => (
-    <Field name={label}>
-        {({ field, form }) => (
-            <FormControl {...props} mt={4}>
-                <FormLabel as="legend" htmlFor={props.id || props.name}>
-                    {label}
-                </FormLabel>
-                <Input {...field} {...props} />
-                <FormErrorMessage>{form.errors[label]}</FormErrorMessage>
-            </FormControl>
-        )}
-    </Field>
-);
+import { newLink } from "../lib/api";
 
 const ShortenerForm = () => {
-    const schema = Yup.object({
-        url: Yup.string().required().url(),
-        code: Yup.string(),
+    const toast = useToast({
+        status: "error",
+        variant: "solid",
+        position: "bottom",
+        isClosable: true,
     });
 
-    const onSubmit = (res, actions) => {
-        alert(JSON.stringify(res));
+    const validationSchema = Yup.object({
+        dest: Yup.string().required("Missing url").url("Not a valid url"),
+        code: Yup.string().matches(
+            /^[\w\d\.]{3,32}$/,
+            "Custom code must be between 3 and 32 letters, numbers and dots."
+        ),
+    });
 
-        setTimeout(() => actions.setSubmitting(false), 2000);
+    const initialValues = {
+        dest: "",
+    };
+
+    const onSubmit = async (values: any, actions: FormikHelpers<any>) => {
+        console.info(values);
+
+        const res = await newLink(values);
+        const data = await res.json();
+
+        actions.setSubmitting(false);
+
+        if (data?.error || !res.ok) {
+            switch (data?.code) {
+                case 10001:
+                    toast({
+                        title: "Error while creating link",
+                        description:
+                            "The url you provided is not a valid link.",
+                    });
+                    break;
+                case 10002:
+                    toast({
+                        title: "Error while creating link",
+                        description:
+                            "The custom code must contain between 3 and 32 characters, that can be letters, numbers and a dot.",
+                    });
+                    break;
+                case 10003:
+                    toast({
+                        title: "Error while creating link",
+                        description: "The code you provided is already in use.",
+                    });
+                    break;
+                case 10004:
+                    toast({
+                        title: "Error while creating link",
+                        description: "Custom code is a reserved word.",
+                    });
+                    break;
+
+                default:
+                    toast({
+                        title: "Unknown error",
+                        description:
+                            "An unknown error occured, and your request failed.",
+                    });
+                    break;
+            }
+            return console.error("krsz.me api error:", JSON.stringify(data));
+        }
+
+        console.info("krsz.me api response", data);
+
+        toast({
+            status: "success",
+            title: "Link created!",
+            description: (
+                <Link href={data.url} target="_blank">
+                    {data.url}
+                </Link>
+            ),
+        });
     };
 
     return (
         <Formik
-            initialValues={{}}
-            validationSchema={schema}
-            onSubmit={onSubmit}>
-            {props => (
-                <Form>
-                    <EpicField
+            initialValues={initialValues}
+            onSubmit={onSubmit}
+            validationSchema={validationSchema}>
+            {({ handleSubmit, values, errors }) => (
+                <Box
+                    as="form"
+                    onSubmit={handleSubmit as any}
+                    autoComplete="off"
+                    w={56}>
+                    <InputControl
+                        name="dest"
                         label="Url"
-                        name="url"
-                        type="text"
-                        placeholder="https://example.com"
-                        isRequired
+                        inputProps={{ placeholder: "https://example.com" }}
                     />
-                    <EpicField
-                        label="Custom code"
+                    <InputControl
                         name="code"
-                        type="text"
-                        placeholder="Leave empty to generate"
+                        label="Custom code"
+                        inputProps={{
+                            placeholder: "Leave empty to generate",
+                        }}
                     />
 
-                    <Button
-                        mt={4}
-                        colorScheme="blue"
-                        isLoading={props.isSubmitting}
-                        type="submit">
-                        Submit
-                    </Button>
-                </Form>
+                    <ButtonGroup mt={5}>
+                        <SubmitButton colorScheme="blue">Create</SubmitButton>
+                    </ButtonGroup>
+                </Box>
             )}
         </Formik>
     );
-
-    // return <p>form here</p>;
 };
 
 export default ShortenerForm;
