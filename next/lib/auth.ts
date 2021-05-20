@@ -2,6 +2,7 @@ import firebase from "firebase/app";
 import "firebase/analytics";
 import "firebase/auth";
 import type { auth as uiAuth } from "firebaseui";
+export { default as withAuth } from "../components/HOC/withAuth";
 
 const config = {
     apiKey: "AIzaSyDx2VXjSakAWoV7JszU6PYZgfJX5OZKOME",

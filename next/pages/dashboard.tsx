@@ -2,7 +2,7 @@ import { Flex, Heading, Link, SimpleGrid, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import Card from "../components/card";
 import { getLinks } from "../lib/api";
-import auth from "../lib/auth";
+import auth, { withAuth } from "../lib/auth";
 
 const Dashboard = ({ user }) => {
     const [links, setLinks] = useState([]);
@@ -48,4 +48,4 @@ const Dashboard = ({ user }) => {
 
 Dashboard.pageName = "Dashboard";
 
-export default Dashboard;
+export default withAuth(Dashboard);
