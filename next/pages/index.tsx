@@ -4,19 +4,18 @@ import ShortenerForm from "../components/shortenerForm";
 
 export default function Home({ user }) {
     return (
-        <Box as="main" h="100%">
+        <Box as="main" mb={16}>
             <VStack m={28}>
-                <Heading as="h1" fontSize="6xl">
+                <Heading as="h1" fontSize="6xl" textAlign="center">
                     krsz.me
                 </Heading>
-                <Text as="h2" fontSize="xl">
+                <Text as="h2" fontSize="xl" textAlign="center">
                     A no-bs url shortener
                 </Text>
             </VStack>
             <Flex
                 align="center"
                 justify="space-evenly"
-                mt={48}
                 direction={{ base: "column", md: "row" }}>
                 <Card mb={{ base: 12, md: 0 }}>
                     <Heading fontSize="md" mb={4}>

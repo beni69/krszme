@@ -1,16 +1,16 @@
-import { Box, Flex, Heading } from "@chakra-ui/react";
+import { Box, Center, Flex, Heading } from "@chakra-ui/react";
 import ShortenerForm from "../components/shortenerForm";
 
 const Create = () => {
     return (
-        <Flex align="center" justify="center" h="100%">
+        <Center h={["69vh", null, "80vh"]}>
             <Box>
                 <Heading fontSize="3xl" mb={4} textAlign="center">
                     Create a link
                 </Heading>
                 <ShortenerForm />
             </Box>
-        </Flex>
+        </Center>
     );
 };
 

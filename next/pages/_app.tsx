@@ -1,4 +1,4 @@
-import { ChakraProvider } from "@chakra-ui/react";
+import { Box, ChakraProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { useState } from "react";
@@ -12,6 +12,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     const [user, setUser] = useState(auth.currentUser);
 
     auth.onAuthStateChanged(setUser);
+
+    const footerHeight = ["8rem", null, "3.5rem"];
 
     return (
         <>
@@ -36,11 +38,15 @@ export default function MyApp({ Component, pageProps }: AppProps) {
             </Head>
 
             <ChakraProvider theme={theme}>
-                <Nav user={user} />
+                <Box id="page-container" pos="relative" minH="100vh">
+                    <Box id="content=wrap" pb={footerHeight}>
+                        <Nav user={user} />
 
-                <Component {...pageProps} user={user} />
+                        <Component {...pageProps} user={user} />
+                    </Box>
 
-                <Footer />
+                    <Footer h={footerHeight} />
+                </Box>
             </ChakraProvider>
         </>
     );
