@@ -1,3 +1,4 @@
+import { ColorModeScript } from "@chakra-ui/color-mode";
 import Document, {
     DocumentContext,
     Head,
@@ -17,6 +18,7 @@ class MyDocument extends Document {
             <Html>
                 <Head />
                 <body>
+                    <ColorModeScript initialColorMode="system" />
                     <Main />
                     <NextScript />
                 </body>
