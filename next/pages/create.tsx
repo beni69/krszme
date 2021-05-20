@@ -1,4 +1,4 @@
-import { Box, Center, Flex, Heading } from "@chakra-ui/react";
+import { Box, Center, Heading } from "@chakra-ui/react";
 import ShortenerForm from "../components/shortenerForm";
 
 const Create = () => {

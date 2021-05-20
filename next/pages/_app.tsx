@@ -39,7 +39,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
             <ChakraProvider theme={theme}>
                 <Box id="page-container" pos="relative" minH="100vh">
-                    <Box id="content=wrap" pb={footerHeight}>
+                    <Box id="content=wrap" minH="100vh" pb={footerHeight}>
                         <Nav user={user} />
 
                         <Component {...pageProps} user={user} />
