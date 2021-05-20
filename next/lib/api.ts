@@ -1,13 +1,8 @@
-import type firebase from "firebase";
 import { getUser } from "./auth";
 
 const API = "https://krsz.me";
 
-export async function newLink(data: {
-    url: string;
-    code?: string;
-    user?: firebase.User;
-}) {
+export async function newLink(data: { url: string; code?: string }) {
     const body = {
         ...data,
         token: await getUser()
@@ -24,6 +19,20 @@ export async function newLink(data: {
     });
 
     return res;
+}
+
+export async function getLinks() {
+    const res = await fetch(`${API}/api/url/me`, {
+        method: "PUT",
+        headers: {
+            "Content-type": "application/json",
+        },
+        body: JSON.stringify({ token: await getUser().getIdToken() }),
+    });
+    const data = await res.json();
+    console.debug({ data });
+
+    return data;
 }
 
 export async function testAPI() {
