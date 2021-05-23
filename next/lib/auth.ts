@@ -19,6 +19,8 @@ export const app = firebase.apps.length
     : firebase.initializeApp(config);
 export const auth = firebase.auth();
 export const getUser = () => auth.currentUser;
+export const getToken = (forceRefresh = false) =>
+    auth.currentUser.getIdToken(forceRefresh).catch(() => null);
 export const isLoggedIn = () => !!auth.currentUser;
 
 auth.onAuthStateChanged(async u => {

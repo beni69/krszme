@@ -15,8 +15,8 @@ const codeGen = customAlphabet(
 
 const router = Router();
 
-router.put("/user/me", async (req, res, next) => {
-    const token = await verifyUser(req.body.token);
+router.get("/user/me", async (req, res, next) => {
+    const token = await verifyUser(req.header("token"));
     if (!token) return next(new ApiError(10000));
 
     res.json(token);
@@ -43,8 +43,8 @@ router.get("/user/:uid", async (req, res, next) => {
     });
 });
 
-router.put("/url/me", async (req, res, next) => {
-    const token = await verifyUser(req.body.token);
+router.get("/url/me", async (req, res, next) => {
+    const token = await verifyUser(req.header("token"));
     if (!token) return next(new ApiError(10000));
 
     const urls: url[] = await Url.find({ userID: token.uid });
@@ -52,26 +52,42 @@ router.put("/url/me", async (req, res, next) => {
     res.json(urls);
 });
 
-async function getUrlCode(req: Request, res: Response, next: NextFunction) {
-    const token = await verifyUser(req.body.token);
-    const url: url = await Url.findById(req.params.code);
+router.get(
+    "/url/:code",
+    async (req: Request, res: Response, next: NextFunction) => {
+        const token = await verifyUser(req.header("token"));
+        const url: url = await Url.findById(req.params.code);
 
-    if (!url) return next(new ApiError(404));
+        if (!url) return next(new ApiError(404));
 
-    const isOwner = url.userID == token?.uid;
+        const isOwner = url.userID == token?.uid;
 
-    if (!isOwner) {
-        const { url: linkUrl, dest } = url;
-        res.json({ url: linkUrl, dest });
-    } else {
-        res.json(url);
+        if (!isOwner) {
+            const { _id, url: linkUrl, dest } = url;
+            res.json({ _id, url: linkUrl, dest });
+        } else {
+            res.json(url);
+        }
     }
-}
-router.get("/url/:code", getUrlCode);
-router.put("/url/:code", getUrlCode);
+);
+
+router.delete("/url/:code", async (req, res, next) => {
+    const token = await verifyUser(req.header("token"));
+    if (!token) return next(new ApiError(10000));
+
+    const code = req.params.code;
+
+    const url: url = await Url.findById(code);
+    if (!url) return next(new ApiError(404));
+    if (token.uid !== url.userID) return next(new ApiError(10000));
+
+    await url.remove();
+
+    res.json(url);
+});
 
 router.post("/url/create", async (req, res, next) => {
-    const token = await verifyUser(req.body.token);
+    const token = await verifyUser(req.header("token"));
 
     let { dest, code } = req.body;
 
