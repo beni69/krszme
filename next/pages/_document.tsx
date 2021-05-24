@@ -15,7 +15,7 @@ class MyDocument extends Document {
 
     render() {
         return (
-            <Html>
+            <Html lang="en">
                 <Head>
                     <meta
                         name="description"
@@ -25,6 +25,8 @@ class MyDocument extends Document {
                         name="keywords"
                         content="url, url shortener, karesz, krsz"
                     />
+                    <link rel="manifest" href="/manifest.json" />
+                    {/* <meta name="theme-color" content="#0f1ff3" /> */}
 
                     {/* OpenGraph */}
                     <meta property="og:title" content="krsz.me" />
@@ -53,7 +55,6 @@ class MyDocument extends Document {
                         sizes="16x16"
                         href="/favicon-16x16.png"
                     />
-                    <link rel="manifest" href="/site.webmanifest" />
                 </Head>
                 <body>
                     <ColorModeScript initialColorMode="system" />

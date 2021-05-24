@@ -1,13 +1,13 @@
 import { Center, Heading } from "@chakra-ui/react";
 
-const page404 = () => {
+const pageOffline = () => {
     return (
         <Center as="main" h={["69vh", null, "80vh"]}>
-            <Heading>404 - not found</Heading>
+            <Heading>You are offline</Heading>
         </Center>
     );
 };
 
-page404.pageName = "Not Found";
+pageOffline.pageName = "Offline";
 
-export default page404;
+export default pageOffline;
