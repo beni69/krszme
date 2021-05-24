@@ -30,6 +30,28 @@ export async function getLinks() {
     return data;
 }
 
+export async function deleteLink(link: url | string) {
+    if (!link) return;
+
+    const code = typeof link === "string" ? link : link._id;
+
+    const res = await fetch(`${API}/api/url/${code}`, {
+        method: "DELETE",
+        headers: {
+            "Content-type": "application/json",
+            token: await getToken(),
+        },
+    });
+
+    const data = await res.json();
+
+    console.debug({ data });
+
+    return [res, data];
+
+    // alert(`${code} deleted`);
+}
+
 export async function testAPI() {
     const res = await fetch(`${API}/test`, {
         method: "GET",
