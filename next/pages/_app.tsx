@@ -18,21 +18,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     return (
         <>
             <Head>
-                <meta property="og:title" content="krsz.me" />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://app.krsz.me" />
-                <meta
-                    property="og:description"
-                    content="a very epic url shortener"
-                />
-                <meta
-                    property="description"
-                    content="a very epic url shortener"
-                />
-                <meta
-                    name="keywords"
-                    content="url, url shortener, karesz, krsz"
-                />
                 {/*@ts-ignore*/}
                 <title>{Component.pageName} | krsz.me</title>
             </Head>
