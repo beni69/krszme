@@ -36,8 +36,8 @@ app.get("/", (req, res) => {
     res.redirect("//app.krsz.me");
 });
 app.all("/test", (req, res) => {
-    const { body, params, query, cookies, ip, path } = req;
-    res.json({ body, params, query, cookies, ip, path });
+    const { headers, body, params, query, cookies, method, ip, path } = req;
+    res.json({ headers, body, params, query, cookies, method, ip, path });
 });
 
 //* redirect to code
