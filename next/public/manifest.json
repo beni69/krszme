@@ -1,5 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
+    "$schema": "https://json.schemastore.org/web-manifest",
     "name": "krsz.me - an epic url shortener",
     "short_name": "krsz.me",
     "start_url": "/",
@@ -19,5 +19,13 @@
         }
     ],
 
-    "background_color": "#ffffff"
+    "background_color": "#ffffff",
+
+    "share_target": {
+        "action": "/create",
+        "method": "GET",
+        "params": {
+            "url": "url"
+        }
+    }
 }
