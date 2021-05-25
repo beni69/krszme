@@ -1,10 +1,19 @@
-import { Box, ButtonGroup, useToast, Link } from "@chakra-ui/react";
+import { Box, ButtonGroup, Link, useToast } from "@chakra-ui/react";
 import { Formik, FormikHelpers } from "formik";
 import { InputControl, SubmitButton } from "formik-chakra-ui";
+import { useRouter } from "next/router";
 import * as Yup from "yup";
 import { newLink } from "../lib/api";
+import { ButtonToast } from "./toastWithButton";
 
 const ShortenerForm = () => {
+    const router = useRouter();
+    const { query } = router;
+
+    if (!router.isReady) return null;
+
+    console.debug({ query });
+
     const toast = useToast({
         status: "error",
         variant: "solid",
@@ -21,7 +30,8 @@ const ShortenerForm = () => {
     });
 
     const initialValues = {
-        dest: "",
+        dest: query.url || "",
+        code: query.code || "",
     };
 
     const onSubmit = async (values: any, actions: FormikHelpers<any>) => {
@@ -32,7 +42,7 @@ const ShortenerForm = () => {
 
         actions.setSubmitting(false);
 
-        if (data?.error || !res.ok) {
+        if (data?.error || !res?.ok) {
             switch (data?.code) {
                 case 10001:
                     toast({
@@ -82,6 +92,20 @@ const ShortenerForm = () => {
                     {data.url}
                 </Link>
             ),
+            render: function ({ onClose, id }) {
+                return (
+                    <ButtonToast
+                        status="success"
+                        variant="solid"
+                        title={this.title}
+                        description={this.description}
+                        isClosable
+                        onClose={onClose}
+                        id={id}
+                        toCopy={data.url}
+                    />
+                );
+            },
         });
     };
 
