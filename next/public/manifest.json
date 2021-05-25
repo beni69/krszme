@@ -25,7 +25,8 @@
         "action": "/create",
         "method": "GET",
         "params": {
-            "url": "url"
+            "url": "url",
+            "text": "url"
         }
     }
 }
