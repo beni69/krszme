@@ -1,6 +1,8 @@
 const withPWA = require("next-pwa");
 
-module.exports = withPWA({
+const PROD = process.env.NODE_ENV === "production";
+
+const config = {
     pwa: {
         dest: "public",
     },
@@ -8,4 +10,6 @@ module.exports = withPWA({
     future: {
         webpack5: true,
     },
-});
+};
+
+module.exports = PROD ? withPWA(config) : config;
