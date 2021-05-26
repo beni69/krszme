@@ -1,4 +1,5 @@
 import { Box, Center, Heading } from "@chakra-ui/react";
+import withTitle from "../components/HOC/withTitle";
 import ShortenerForm from "../components/shortenerForm";
 
 const Create = () => {
@@ -14,6 +15,4 @@ const Create = () => {
     );
 };
 
-Create.pageName = "Create a link";
-
-export default Create;
+export default withTitle(Create, "Create a link");

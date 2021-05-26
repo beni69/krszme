@@ -8,6 +8,7 @@ import {
     Avatar,
 } from "@chakra-ui/react";
 import Card from "../components/card";
+import withTitle from "../components/HOC/withTitle";
 import auth, { withAuth } from "../lib/auth";
 
 const Profile = ({ user }: { user: firebase.default.User }) => {
@@ -28,6 +29,4 @@ const Profile = ({ user }: { user: firebase.default.User }) => {
     );
 };
 
-Profile.pageName = "Profile";
-
-export default withAuth(Profile);
+export default withAuth(withTitle(Profile, "Profile"));

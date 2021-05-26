@@ -16,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import Card from "../components/card";
+import withTitle from "../components/HOC/withTitle";
 import { deleteLink, getLinks } from "../lib/api";
 import auth, { withAuth } from "../lib/auth";
 
@@ -140,6 +141,4 @@ const Dashboard = ({ user }) => {
     );
 };
 
-Dashboard.pageName = "Dashboard";
-
-export default withAuth(Dashboard);
+export default withAuth(withTitle(Dashboard, "Dashboard"));

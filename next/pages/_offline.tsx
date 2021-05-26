@@ -1,4 +1,5 @@
 import { Center, Heading } from "@chakra-ui/react";
+import withTitle from "../components/HOC/withTitle";
 
 const pageOffline = () => {
     return (
@@ -8,6 +9,4 @@ const pageOffline = () => {
     );
 };
 
-pageOffline.pageName = "Offline";
-
-export default pageOffline;
+export default withTitle(pageOffline, "You are offline");

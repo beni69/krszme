@@ -1,4 +1,5 @@
 import { Center, Heading } from "@chakra-ui/react";
+import withTitle from "../components/HOC/withTitle";
 
 const page404 = () => {
     return (
@@ -8,6 +9,4 @@ const page404 = () => {
     );
 };
 
-page404.pageName = "Not Found";
-
-export default page404;
+export default withTitle(page404, "Not found");

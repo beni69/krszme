@@ -1,5 +1,6 @@
 import { Center, Flex, Heading } from "@chakra-ui/react";
 import FirebaseUI from "react-firebaseui/StyledFirebaseAuth";
+import withTitle from "../components/HOC/withTitle";
 import { auth, uiConfig } from "../lib/auth";
 
 const Login = ({ user }) => {
@@ -16,6 +17,4 @@ const Login = ({ user }) => {
     );
 };
 
-Login.pageName = "Login";
-
-export default Login;
+export default withTitle(Login, "Login");

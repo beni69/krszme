@@ -18,8 +18,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     return (
         <>
             <Head>
-                {/*@ts-ignore*/}
-                <title>{Component.pageName} | krsz.me</title>
+                <title>krsz.me</title>
             </Head>
 
             <ChakraProvider theme={theme}>

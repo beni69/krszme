@@ -51,4 +51,3 @@ export default function Home({ user }) {
         </Box>
     );
 }
-Home.pageName = "Home";
