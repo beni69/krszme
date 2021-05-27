@@ -44,7 +44,7 @@ app.all("/test", (req, res) => {
 app.get("/:code", async (req, res) => {
     const dest: url = await Url.findById(req.params.code);
 
-    if (!dest) return res.status(404).send("link not found");
+    if (!dest) return res.redirect(301, "//app.krsz.me/linknotfound");
 
     res.redirect(301, dest.dest);
 

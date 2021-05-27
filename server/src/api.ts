@@ -6,7 +6,7 @@ import { auth, verifyUser } from "./lib/firebase";
 import { url, Url } from "./lib/mongoose";
 
 const BASE = "https://krsz.me";
-const RESERVED = ["home", "app", "api", "login", "signin", "signup"];
+const RESERVED = ["home", "app", "api", "login", "signin", "signup", "test"];
 const codeRegex = /^[\w\d\.]{3,32}$/;
 const codeGen = customAlphabet(
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
