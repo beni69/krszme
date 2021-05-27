@@ -7,18 +7,17 @@ import {
     AlertDialogOverlay,
     Button,
     CloseButton,
-    Flex,
-    Heading,
-    Link,
     SimpleGrid,
+    SkeletonText,
     Text,
     useToast,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Card from "../components/card";
 import withTitle from "../components/HOC/withTitle";
+import Link from "../components/link";
 import { deleteLink, getLinks } from "../lib/api";
-import auth, { withAuth } from "../lib/auth";
+import { AuthContext, withAuth } from "../lib/auth";
 
 const DeleteAlert = ({ isOpen, leastDestructiveRef, onClose, onOk }) => (
     <AlertDialog
@@ -48,11 +47,34 @@ const DeleteAlert = ({ isOpen, leastDestructiveRef, onClose, onOk }) => (
     </AlertDialog>
 );
 
-const Dashboard = ({ user }) => {
-    const [links, setLinks] = useState([] as url[]);
+const array = (n: number, item?: any) => {
+    const arr = [];
+
+    for (let i = 0; i < n; i++) {
+        arr.push(item);
+    }
+
+    return arr;
+};
+
+const Dashboard = () => {
+    const user = useContext(AuthContext);
+    const [links, setLinks] = useState<url[]>(
+        array(6, {
+            _id: "example",
+            clicks: 69,
+            dest: "https://example.com",
+            timestamp: new Date(),
+            url: "https://example.com",
+            userID: "12345678901234567890",
+        } as url)
+    );
+    const [loading, setLoading] = useState(true);
+    // stuff below is needed for deleting links
     const [ddOpen, setDdOpen] = useState(false);
     const cancelRef = useRef();
-    const [L2D, setL2D] = useState(null as url);
+    const [L2D, setL2D] = useState<url>(null);
+
     const toast = useToast({
         variant: "solid",
         position: "bottom",
@@ -63,6 +85,14 @@ const Dashboard = ({ user }) => {
         setDdOpen(true);
         setL2D(link);
     };
+
+    const load = () =>
+        getLinks().then(l => {
+            setLinks(l);
+            console.log({ links, l });
+
+            setTimeout(() => setLoading(false), 300);
+        });
 
     const del = async () => {
         const [res, data] = await deleteLink(L2D);
@@ -80,14 +110,14 @@ const Dashboard = ({ user }) => {
             description: "Link deleted.",
         });
 
-        getLinks().then(setLinks);
+        load();
     };
 
-    auth.onAuthStateChanged(u => {
-        if (u && !links.length) getLinks().then(setLinks);
-    });
+    useEffect(() => {
+        load();
+    }, [user]);
 
-    return links.length ? (
+    return (
         <>
             <SimpleGrid
                 as="main"
@@ -95,7 +125,7 @@ const Dashboard = ({ user }) => {
                 minChildWidth={["240px", "360px"]}
                 m={[8, null, 16]}>
                 {links.map(l => (
-                    <Card key={l._id} pos="relative">
+                    <Card pos="relative">
                         <CloseButton
                             pos="absolute"
                             top={0}
@@ -104,22 +134,35 @@ const Dashboard = ({ user }) => {
                             onClick={() => delPopup(l)}
                         />
 
-                        <Link href={l.url} target="_blank" fontSize="md">
-                            {l.url}
-                        </Link>
-
-                        <Text>
-                            Destination:{" "}
-                            <Link href={l.dest} target="blank">
-                                {l.dest}
+                        <SkeletonText isLoaded={!loading}>
+                            <Link
+                                href={l.url}
+                                isExternal
+                                variant="cool"
+                                fontSize="lg">
+                                {l.url}
                             </Link>
-                        </Text>
+                        </SkeletonText>
 
-                        <Text>Clicks: {l.clicks}</Text>
+                        <SkeletonText isLoaded={!loading}>
+                            <Text>
+                                Destination:{" "}
+                                <Link href={l.dest} isExternal variant="cool">
+                                    {l.dest}
+                                </Link>
+                            </Text>
+                        </SkeletonText>
 
-                        <Text>
-                            Created at: {new Date(l.timestamp).toLocaleString()}
-                        </Text>
+                        <SkeletonText isLoaded={!loading}>
+                            <Text>Clicks: {l.clicks}</Text>
+                        </SkeletonText>
+
+                        <SkeletonText isLoaded={!loading}>
+                            <Text>
+                                Created at:{" "}
+                                {new Date(l.timestamp).toLocaleString()}
+                            </Text>
+                        </SkeletonText>
                     </Card>
                 ))}
             </SimpleGrid>
@@ -130,14 +173,6 @@ const Dashboard = ({ user }) => {
                 onOk={del}
             />
         </>
-    ) : (
-        <Flex
-            align="center"
-            justify="space-evenly"
-            m={48}
-            direction={{ base: "column", md: "row" }}>
-            <Heading align="center">no links</Heading>
-        </Flex>
     );
 };
 

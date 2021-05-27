@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, getUser } from "./auth";
 
 const API = "https://krsz.me";
 
@@ -12,10 +12,26 @@ export async function newLink(data: { url: string; code?: string }) {
         body: JSON.stringify(data),
     });
 
+    sessionStorage.removeItem("links");
+
     return res;
 }
 
-export async function getLinks() {
+export async function getLinks(): Promise<url[]> {
+    if (!getUser()) return [];
+
+    // 1 min
+    const DELAY = 60000;
+
+    let links = window && JSON.parse(sessionStorage.getItem("links"));
+    if (
+        links &&
+        links.uid === getUser().uid &&
+        links.time + DELAY > Date.now()
+    ) {
+        return links.l;
+    }
+
     const res = await fetch(`${API}/api/url/me`, {
         method: "GET",
         headers: {
@@ -27,10 +43,13 @@ export async function getLinks() {
     const data = await res.json();
     console.debug({ data });
 
+    links = JSON.stringify({ uid: getUser().uid, l: data, time: Date.now() });
+    window && sessionStorage.setItem("links", links);
+
     return data;
 }
 
-export async function deleteLink(link: url | string) {
+export async function deleteLink(link: url | string): Promise<[Response, any]> {
     if (!link) return;
 
     const code = typeof link === "string" ? link : link._id;
@@ -48,8 +67,6 @@ export async function deleteLink(link: url | string) {
     console.debug({ data });
 
     return [res, data];
-
-    // alert(`${code} deleted`);
 }
 
 export async function testAPI() {
