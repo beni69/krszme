@@ -1,8 +1,12 @@
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
+import { useContext } from "react";
 import Card from "../components/card";
 import ShortenerForm from "../components/shortenerForm";
+import { AuthContext } from "../lib/auth";
 
-export default function Home({ user }) {
+export default function Home() {
+    const user = useContext(AuthContext);
+
     return (
         <Box as="main" mb={16}>
             <VStack m={28}>

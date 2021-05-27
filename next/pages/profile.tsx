@@ -1,17 +1,12 @@
-import {
-    Box,
-    Center,
-    Flex,
-    VStack,
-    Text,
-    Heading,
-    Avatar,
-} from "@chakra-ui/react";
+import { Avatar, Center, Heading, Text, VStack } from "@chakra-ui/react";
+import { useContext } from "react";
 import Card from "../components/card";
 import withTitle from "../components/HOC/withTitle";
-import auth, { withAuth } from "../lib/auth";
+import { AuthContext, withAuth } from "../lib/auth";
 
-const Profile = ({ user }: { user: firebase.default.User }) => {
+const Profile = () => {
+    const user = useContext(AuthContext);
+
     if (!user) return null;
 
     return (

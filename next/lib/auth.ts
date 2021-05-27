@@ -2,7 +2,9 @@ import firebase from "firebase/app";
 import "firebase/analytics";
 import "firebase/auth";
 import type { auth as uiAuth } from "firebaseui";
+import { createContext } from "react";
 export { default as withAuth } from "../components/HOC/withAuth";
+import router from "next/router";
 
 const config = {
     apiKey: "AIzaSyDx2VXjSakAWoV7JszU6PYZgfJX5OZKOME",
@@ -17,16 +19,47 @@ const config = {
 export const app = firebase.apps.length
     ? firebase.app()
     : firebase.initializeApp(config);
+
 export const auth = firebase.auth();
-export const getUser = () => auth.currentUser;
+
+export const getUser = () => USER;
+
 export const getToken = (forceRefresh = false) =>
     auth.currentUser.getIdToken(forceRefresh).catch(() => null);
-export const isLoggedIn = () => !!auth.currentUser;
+
+export const authState = () => {
+    switch (USER) {
+        case undefined:
+            return -1;
+
+        case null:
+            return 0;
+
+        default:
+            return 1;
+    }
+};
+
+export const signOut = () => {
+    router.push("/").then(() => {
+        auth.signOut();
+        sessionStorage.clear();
+    });
+};
+
+let USER: firebase.User = undefined;
 
 auth.onAuthStateChanged(async u => {
+    USER = u;
+
     console.log(u ? "signed in" : "signed out");
-    if (u) console.debug(`jwt token: ${await u.getIdToken()}`);
+
+    if (u) {
+        console.debug(`jwt token: ${await u.getIdToken()}`);
+    }
 });
+
+export const AuthContext = createContext<firebase.User>(auth.currentUser);
 
 export const uiConfig: uiAuth.Config = {
     signInOptions: [
