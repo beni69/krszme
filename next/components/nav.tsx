@@ -6,7 +6,6 @@ import {
     Flex,
     HStack,
     IconButton,
-    Link,
     Menu,
     MenuButton,
     MenuDivider,
@@ -16,7 +15,10 @@ import {
     useColorModeValue,
     useDisclosure,
 } from "@chakra-ui/react";
-import auth from "../lib/auth";
+import NextLink from "next/link";
+import { useContext } from "react";
+import { AuthContext, signOut } from "../lib/auth";
+import Link from "./link";
 import ThemeSwitcher from "./themeSwitcher";
 
 const Links: {
@@ -29,6 +31,7 @@ const Links: {
 
 const NavLink = ({ link }: { link: typeof Links[0] }) => (
     <Link
+        // as={NextLink}
         px={2}
         py={1}
         rounded={"md"}
@@ -41,21 +44,21 @@ const NavLink = ({ link }: { link: typeof Links[0] }) => (
     </Link>
 );
 
-const NavUser = ({ user }) =>
+const NavUser = ({ user }: { user: firebase.default.User }) => {
     // user logged in
-    user ? (
+    return user ? (
         <>
             {/* action button */}
-            <Button
-                as="a"
-                href="/create"
-                variant={"solid"}
-                colorScheme={"blue"}
-                size={"sm"}
-                mr={4}
-                leftIcon={<AddIcon />}>
-                Create
-            </Button>
+            <NextLink href="/create">
+                <Button
+                    variant={"solid"}
+                    colorScheme={"blue"}
+                    size={"sm"}
+                    mr={4}
+                    leftIcon={<AddIcon />}>
+                    Create
+                </Button>
+            </NextLink>
             {/* user pfp */}
             <Menu>
                 <MenuButton
@@ -71,28 +74,27 @@ const NavUser = ({ user }) =>
                 </MenuButton>
                 {/* user dropdown */}
                 <MenuList>
-                    <MenuItem as="a" href="/profile">
-                        Profile
-                    </MenuItem>
+                    <NextLink href="/profile">
+                        <MenuItem>Profile</MenuItem>
+                    </NextLink>
                     <MenuDivider />
-                    <MenuItem onClick={() => auth.signOut()}>Sign out</MenuItem>
+                    <MenuItem onClick={() => signOut()}>Sign out</MenuItem>
                 </MenuList>
             </Menu>
         </>
     ) : (
         // user not logged in
-        <Button
-            as={"a"}
-            href="/login"
-            variant={"solid"}
-            colorScheme={"blue"}
-            size={"sm"}
-            mr={4}>
-            Sign in
-        </Button>
+        <NextLink href="/login">
+            <Button variant={"solid"} colorScheme={"blue"} size={"sm"} mr={4}>
+                Sign in
+            </Button>
+        </NextLink>
     );
+};
 
-export default function Nav({ user }) {
+export default function Nav() {
+    const user = useContext(AuthContext);
+
     const { isOpen, onOpen, onClose } = useDisclosure();
 
     return (
