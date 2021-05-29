@@ -89,9 +89,8 @@ const Dashboard = () => {
     const load = () =>
         getLinks().then(l => {
             setLinks(l);
-            console.log({ links, l });
 
-            setTimeout(() => setLoading(false), 300);
+            setLoading(false);
         });
 
     const del = async () => {

@@ -31,7 +31,6 @@ const Links: {
 
 const NavLink = ({ link }: { link: typeof Links[0] }) => (
     <Link
-        // as={NextLink}
         px={2}
         py={1}
         rounded={"md"}
@@ -62,6 +61,7 @@ const NavUser = ({ user }: { user: firebase.default.User }) => {
             {/* user pfp */}
             <Menu>
                 <MenuButton
+                    _focus={{}}
                     as={Button}
                     rounded={"full"}
                     variant={"link"}
@@ -73,7 +73,7 @@ const NavUser = ({ user }: { user: firebase.default.User }) => {
                     />
                 </MenuButton>
                 {/* user dropdown */}
-                <MenuList>
+                <MenuList rootProps={{ style: { right: 0 } }}>
                     <NextLink href="/profile">
                         <MenuItem>Profile</MenuItem>
                     </NextLink>

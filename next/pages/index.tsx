@@ -1,11 +1,22 @@
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import { useContext } from "react";
 import Card from "../components/card";
+import Link, { NextLink } from "../components/link";
 import ShortenerForm from "../components/shortenerForm";
 import { AuthContext } from "../lib/auth";
 
 export default function Home() {
     const user = useContext(AuthContext);
+
+    const btnProps = user
+        ? {
+              text: "Go to dashboard",
+              href: "/dashboard",
+          }
+        : {
+              text: "Create an account",
+              href: "/login",
+          };
 
     return (
         <Box as="main" mb={16}>
@@ -28,29 +39,16 @@ export default function Home() {
                     <ShortenerForm />
                 </Card>
 
-                {user ? (
+                <NextLink href={btnProps.href}>
                     <Button
-                        as="a"
-                        href="/dashboard"
                         maxW="420px"
                         minW="240px"
                         p={8}
                         fontSize="2xl"
                         colorScheme="blue">
-                        Go to dashboard
+                        {btnProps.text}
                     </Button>
-                ) : (
-                    <Button
-                        as="a"
-                        href="/login"
-                        maxW="420px"
-                        minW="240px"
-                        p={8}
-                        fontSize="2xl"
-                        colorScheme="blue">
-                        Create an account
-                    </Button>
-                )}
+                </NextLink>
             </Flex>
         </Box>
     );
