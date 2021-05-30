@@ -92,7 +92,7 @@ const NavUser = ({ user }: { user: firebase.default.User }) => {
     );
 };
 
-export default function Nav() {
+export default function Nav({ navRef }) {
     const user = useContext(AuthContext);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -121,8 +121,12 @@ export default function Nav() {
                 </HStack>
                 {/* right side */}
                 <Flex alignItems={"center"}>
-                    <ThemeSwitcher />
-                    <NavUser user={user} />
+                    <Flex alignItems={"center"} ref={navRef} />
+
+                    <Flex alignItems={"center"}>
+                        <ThemeSwitcher />
+                        <NavUser user={user} />
+                    </Flex>
                 </Flex>
             </Flex>
 

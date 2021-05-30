@@ -1,3 +1,4 @@
+import { CopyIcon, DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
     AlertDialog,
     AlertDialogBody,
@@ -5,14 +6,42 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogOverlay,
+    Box,
+    BoxProps,
     Button,
-    CloseButton,
+    Center,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuDivider,
+    MenuItem,
+    MenuList,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Portal,
     SimpleGrid,
     SkeletonText,
+    Spinner,
     Text,
+    useClipboard,
+    useDisclosure,
     useToast,
 } from "@chakra-ui/react";
-import { useContext, useEffect, useRef, useState } from "react";
+import QRCode from "qrcode.react";
+import {
+    MutableRefObject,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+import { GoSync } from "react-icons/go";
+import { ImQrcode } from "react-icons/im";
 import Card from "../components/card";
 import withTitle from "../components/HOC/withTitle";
 import Link from "../components/link";
@@ -47,6 +76,94 @@ const DeleteAlert = ({ isOpen, leastDestructiveRef, onClose, onOk }) => (
     </AlertDialog>
 );
 
+const LinkMenu = (
+    props: BoxProps & { link: url; onDel: (link: url) => void }
+) => {
+    const { link, onDel, ...rest } = props;
+
+    const { hasCopied, onCopy } = useClipboard(link.url);
+    const toast = useToast({
+        status: "success",
+        title: "Copied to clipboard",
+        variant: "left-accent",
+        position: "bottom",
+        isClosable: true,
+    });
+    if (hasCopied) toast();
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    return (
+        <>
+            <Box {...rest}>
+                <Menu>
+                    <MenuButton
+                        as={IconButton}
+                        aria-label="Options"
+                        icon={<HamburgerIcon />}
+                    />
+
+                    <MenuList
+                        rootProps={{
+                            style: {
+                                right: 0,
+                            },
+                        }}
+                        className="bruh">
+                        <MenuItem icon={<CopyIcon />} onClick={onCopy}>
+                            Copy link
+                        </MenuItem>
+                        <MenuItem icon={<ImQrcode />} onClick={onOpen}>
+                            Show QR code
+                        </MenuItem>
+                        <MenuDivider />
+                        <MenuItem
+                            icon={<DeleteIcon />}
+                            onClick={() => onDel(link)}>
+                            Delete
+                        </MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+
+                <ModalContent>
+                    <ModalHeader>QR Code</ModalHeader>
+
+                    <ModalCloseButton />
+
+                    <ModalBody>
+                        <Center>
+                            <QRCode
+                                value={link.url}
+                                size={256}
+                                level="M"
+                                renderAs="canvas"
+                                imageSettings={{
+                                    src: "/android-chrome-512x512.png",
+                                    excavate: true,
+                                    x: null,
+                                    y: null,
+                                    height: 69,
+                                    width: 69,
+                                }}
+                            />
+                        </Center>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button colorScheme="blue" onClick={onClose}>
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </>
+    );
+};
+
 const array = (n: number, item?: any) => {
     const arr = [];
 
@@ -57,7 +174,7 @@ const array = (n: number, item?: any) => {
     return arr;
 };
 
-const Dashboard = () => {
+const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
     const user = useContext(AuthContext);
     const [links, setLinks] = useState<url[]>(
         array(6, {
@@ -86,14 +203,18 @@ const Dashboard = () => {
         setL2D(link);
     };
 
-    const load = () =>
-        getLinks().then(l => {
-            setLinks(l);
+    const load = async (force = false) => {
+        setLoading(true);
 
-            setLoading(false);
-        });
+        const l = await getLinks(force);
+        setLinks(l);
+
+        setLoading(false);
+    };
 
     const del = async () => {
+        setDdOpen(false);
+
         const [res, data] = await deleteLink(L2D);
 
         if (!res.ok || data.error)
@@ -109,7 +230,7 @@ const Dashboard = () => {
             description: "Link deleted.",
         });
 
-        load();
+        load(true);
     };
 
     useEffect(() => {
@@ -125,12 +246,13 @@ const Dashboard = () => {
                 m={[8, null, 16]}>
                 {links.map(l => (
                     <Card pos="relative">
-                        <CloseButton
+                        <LinkMenu
+                            link={l}
+                            onDel={delPopup}
                             pos="absolute"
-                            top={0}
-                            right={0}
-                            m={1}
-                            onClick={() => delPopup(l)}
+                            top={1}
+                            right={1}
+                            // m={2}
                         />
 
                         <SkeletonText isLoaded={!loading}>
@@ -165,12 +287,29 @@ const Dashboard = () => {
                     </Card>
                 ))}
             </SimpleGrid>
+
             <DeleteAlert
                 isOpen={ddOpen}
                 leastDestructiveRef={cancelRef}
                 onClose={() => setDdOpen(false)}
                 onOk={del}
             />
+
+            <Portal containerRef={navRef}>
+                <IconButton
+                    aria-label="refresh"
+                    size="sm"
+                    icon={
+                        loading ? (
+                            <Spinner size="sm" />
+                        ) : (
+                            <GoSync size="1.125rem" />
+                        )
+                    }
+                    mr={2}
+                    onClick={() => load(true)}
+                />
+            </Portal>
         </>
     );
 };

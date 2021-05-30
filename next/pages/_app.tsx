@@ -1,7 +1,8 @@
 import { Box, ChakraProvider } from "@chakra-ui/react";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { IconContext } from "react-icons";
 import Footer from "../components/footer";
 import Loader from "../components/loader";
 import Nav from "../components/nav";
@@ -16,7 +17,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
     const footerHeight = ["8rem", null, "3.5rem"];
 
-    // if (user === undefined) return null;
+    const navRef = useRef(null);
 
     return (
         <>
@@ -26,25 +27,32 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
             {/* chakra ui */}
             <ChakraProvider theme={theme}>
-                {/* custom firebase auth context */}
-                <AuthContext.Provider value={user}>
-                    {user !== undefined ? (
-                        <Box id="page-container" pos="relative" minH="100vh">
+                {/* react icons */}
+                <IconContext.Provider
+                    value={{ style: { verticalAlign: "middle" } }}>
+                    {/* custom firebase auth context */}
+                    <AuthContext.Provider value={user}>
+                        {user !== undefined ? (
                             <Box
-                                id="content=wrap"
-                                minH="100vh"
-                                pb={footerHeight}>
-                                <Nav />
+                                id="page-container"
+                                pos="relative"
+                                minH="100vh">
+                                <Box
+                                    id="content=wrap"
+                                    minH="100vh"
+                                    pb={footerHeight}>
+                                    <Nav navRef={navRef} />
 
-                                <Component {...pageProps} />
+                                    <Component {...pageProps} navRef={navRef} />
+                                </Box>
+
+                                <Footer h={footerHeight} />
                             </Box>
-
-                            <Footer h={footerHeight} />
-                        </Box>
-                    ) : (
-                        <Loader />
-                    )}
-                </AuthContext.Provider>
+                        ) : (
+                            <Loader />
+                        )}
+                    </AuthContext.Provider>
+                </IconContext.Provider>
             </ChakraProvider>
         </>
     );

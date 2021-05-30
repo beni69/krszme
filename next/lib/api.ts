@@ -17,7 +17,7 @@ export async function newLink(data: { url: string; code?: string }) {
     return res;
 }
 
-export async function getLinks(): Promise<url[]> {
+export async function getLinks(force = false): Promise<url[]> {
     if (!getUser()) return [];
 
     // 1 min
@@ -25,6 +25,7 @@ export async function getLinks(): Promise<url[]> {
 
     let links = window && JSON.parse(sessionStorage.getItem("links"));
     if (
+        force !== true &&
         links &&
         links.uid === getUser().uid &&
         links.time + DELAY > Date.now()
