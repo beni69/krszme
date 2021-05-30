@@ -1,7 +1,7 @@
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import { useContext } from "react";
 import Card from "../components/card";
-import Link, { NextLink } from "../components/link";
+import { NextLink } from "../components/link";
 import ShortenerForm from "../components/shortenerForm";
 import { AuthContext } from "../lib/auth";
 
@@ -25,7 +25,7 @@ export default function Home() {
                     krsz.me
                 </Heading>
                 <Text as="h2" fontSize="xl" textAlign="center">
-                    A no-bs url shortener
+                    an epic url shortener
                 </Text>
             </VStack>
             <Flex
