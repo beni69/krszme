@@ -72,6 +72,7 @@ export const uiConfig: uiAuth.Config = {
             scopes: ["public_profile", "email"],
         },
         firebase.auth.GithubAuthProvider.PROVIDER_ID,
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
         // {
         //     provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
         //     signInMethod:
