@@ -45,6 +45,7 @@ import { ImQrcode } from "react-icons/im";
 import Card from "../components/card";
 import withTitle from "../components/HOC/withTitle";
 import Link from "../components/link";
+import analytics from "../lib/analytics";
 import { deleteLink, getLinks } from "../lib/api";
 import { AuthContext, withAuth } from "../lib/auth";
 
@@ -229,6 +230,8 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
             title: "Success",
             description: "Link deleted.",
         });
+
+        analytics().logEvent("delete_link");
 
         load(true);
     };

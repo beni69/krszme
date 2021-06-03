@@ -1,26 +1,12 @@
 import firebase from "firebase/app";
-import "firebase/analytics";
 import "firebase/auth";
 import type { auth as uiAuth } from "firebaseui";
-import { createContext } from "react";
-export { default as withAuth } from "../components/HOC/withAuth";
 import router from "next/router";
+import { createContext } from "react";
+import app from "./firebase";
+export { default as withAuth } from "../components/HOC/withAuth";
 
-const config = {
-    apiKey: "AIzaSyDx2VXjSakAWoV7JszU6PYZgfJX5OZKOME",
-    authDomain: "krszme.firebaseapp.com",
-    projectId: "krszme",
-    storageBucket: "krszme.appspot.com",
-    messagingSenderId: "1002758976981",
-    appId: "1:1002758976981:web:b2c10e4a823e3fcb4d795c",
-    measurementId: "G-V0F4B0H7M9",
-};
-
-export const app = firebase.apps.length
-    ? firebase.app()
-    : firebase.initializeApp(config);
-
-export const auth = firebase.auth();
+export const auth = app.auth();
 
 export const getUser = () => USER;
 
