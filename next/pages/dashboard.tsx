@@ -185,6 +185,7 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
             timestamp: new Date(),
             url: "https://example.com",
             userID: "12345678901234567890",
+            dummy: true,
         } as url)
     );
     const [loading, setLoading] = useState(true);
@@ -204,26 +205,26 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
         setL2D(link);
     };
 
-    const load = async (force = false) => {
-        setLoading(true);
-
-        const l = await getLinks(force);
-        setLinks(l);
-
-        setLoading(false);
-    };
-
     const del = async () => {
         setDdOpen(false);
 
         const [res, data] = await deleteLink(L2D);
 
-        if (!res.ok || data.error)
-            return toast({
-                status: "error",
-                title: "Error",
-                description: "An unknown error occured.",
-            });
+        if (!res.ok || data.error) {
+            if (data.code === 429)
+                toast({
+                    status: "error",
+                    title: "You are deleting links too fast",
+                    description: "Please wait a bit before trying again.",
+                });
+            else
+                toast({
+                    status: "error",
+                    title: "Error",
+                    description: "An unknown error occured.",
+                });
+            return;
+        }
 
         toast({
             status: "success",
@@ -234,6 +235,26 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
         analytics().logEvent("delete_link");
 
         load(true);
+    };
+
+    const load = async (force = false) => {
+        setLoading(true);
+
+        const l = await getLinks(force);
+
+        if ((l as ApiError).error) {
+            if (!(links[0] as any).dummy) setLoading(false);
+
+            toast({
+                status: "warning",
+                title: "You are refreshing too fast",
+                description:
+                    "I know watching the clicks coming in is fun but you need to chill out.",
+            });
+            return;
+        }
+        setLinks(l as url[]);
+        setLoading(false);
     };
 
     useEffect(() => {

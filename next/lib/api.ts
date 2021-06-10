@@ -17,7 +17,7 @@ export async function newLink(data: { url: string; code?: string }) {
     return res;
 }
 
-export async function getLinks(force = false): Promise<url[]> {
+export async function getLinks(force = false): Promise<url[] | ApiError> {
     if (!getUser()) return [];
 
     // 1 min

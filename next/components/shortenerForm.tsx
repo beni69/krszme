@@ -72,6 +72,14 @@ const ShortenerForm = () => {
                     });
                     break;
 
+                case 429:
+                    toast({
+                        title: "You are creating links too quickly",
+                        description:
+                            "Who knew shortening links can be so addictive?",
+                    });
+                    break;
+
                 default:
                     toast({
                         title: "Unknown error",
