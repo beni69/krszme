@@ -10,6 +10,7 @@ export class ApiError extends Error {
     public static Types = ApiError.mkTypes([
         // basic
         { id: 404, code: 404, name: "not found" },
+        { id: 429, code: 429, name: "rate limited" },
 
         // custom
         { id: 10000, name: "Invalid or missing jwt token", code: 403 },
