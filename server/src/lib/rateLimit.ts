@@ -9,6 +9,8 @@ const def: rlOptions = {
     // return an apierror on ratelimit
     handler: (req, res, next) => next(new ApiError(429)),
 
+    skip: () => process.env.NODE_ENV !== "production",
+
     // log the ratelimit
     onLimitReached: (req, res, opts) => {
         console.log(
@@ -23,8 +25,8 @@ const def: rlOptions = {
 
 export const defaultRL = rateLimit({
     ...def,
-    windowMs: 15 * 60 * 1000,
-    max: 69,
+    windowMs: 5 * 60 * 1000,
+    max: 25,
 });
 
 export const createRL = rateLimit({
