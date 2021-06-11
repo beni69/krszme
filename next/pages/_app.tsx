@@ -64,7 +64,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
                                 <Footer h={footerHeight} />
                             </Box>
                         ) : (
-                            <Loader />
+                            <Loader h="100vh" w="100vw" />
                         )}
                     </AuthContext.Provider>
                 </IconContext.Provider>
