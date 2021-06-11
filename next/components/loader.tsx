@@ -1,8 +1,8 @@
-import { Center, Spinner } from "@chakra-ui/react";
+import { Center, CenterProps, Spinner } from "@chakra-ui/react";
 
-const Loader = () => {
+const Loader = (props: CenterProps) => {
     return (
-        <Center h="100vh" w="100vw">
+        <Center {...props}>
             <Spinner size="xl" />
         </Center>
     );
