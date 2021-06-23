@@ -10,12 +10,15 @@ import {
     BoxProps,
     Button,
     Center,
+    Heading,
     IconButton,
     Menu,
     MenuButton,
     MenuDivider,
     MenuItem,
+    MenuItemOption,
     MenuList,
+    MenuOptionGroup,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -34,6 +37,7 @@ import {
 } from "@chakra-ui/react";
 import QRCode from "qrcode.react";
 import { MutableRefObject, useContext, useRef, useState } from "react";
+import { FaSortAmountDownAlt, FaSortAmountUpAlt } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 import { ImQrcode } from "react-icons/im";
 import Card from "../components/card";
@@ -179,6 +183,10 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
 
     const { links, isLoading, forceReload } = useLinks();
 
+    // sorting links
+    const [sort, setSort] = useState<"date" | "clicks">("date");
+    const [order, setOrder] = useState<"asc" | "desc">("asc");
+
     const toast = useToast({
         variant: "solid",
         position: "bottom",
@@ -187,62 +195,150 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
 
     return (
         <>
-            {links ? (
+            {links?.length ? (
                 <SimpleGrid
                     as="main"
                     spacing={16}
                     minChildWidth={["240px", "360px"]}
                     m={[8, null, 16]}>
-                    {links.map((l: url) => (
-                        <Card pos="relative">
-                            <LinkMenu
-                                link={l}
-                                pos="absolute"
-                                top={1}
-                                right={1}
-                            />
+                    {(links as url[])
+                        .sort((a, b) => {
+                            let value;
+                            switch (sort) {
+                                case "date":
+                                    //@ts-ignore
+                                    value =
+                                        new Date(a.timestamp).getTime() -
+                                        new Date(b.timestamp).getTime();
+                                    break;
 
-                            <SkeletonText isLoaded={!isLoading}>
-                                <Link
-                                    href={l.url}
-                                    isExternal
-                                    variant="cool"
-                                    fontSize="lg">
-                                    {l.url}
-                                </Link>
-                            </SkeletonText>
+                                case "clicks":
+                                    value = a.clicks - b.clicks;
+                                    break;
+                            }
+                            if (order === "asc") return value;
+                            else return value * -1;
+                        })
+                        .map(l => (
+                            <Card pos="relative">
+                                <LinkMenu
+                                    link={l}
+                                    pos="absolute"
+                                    top={1}
+                                    right={1}
+                                />
 
-                            <SkeletonText isLoaded={!isLoading}>
-                                <Text>
-                                    Destination:{" "}
+                                <SkeletonText
+                                    isLoaded={!isLoading}
+                                    noOfLines={1}
+                                    spacing={1}
+                                    mt={isLoading && 3}>
                                     <Link
-                                        href={l.dest}
+                                        href={l.url}
                                         isExternal
                                         variant="cool"
-                                        noOfLines={1}>
-                                        {l.dest}
+                                        fontSize="lg">
+                                        {l.url}
                                     </Link>
-                                </Text>
-                            </SkeletonText>
+                                </SkeletonText>
 
-                            <SkeletonText isLoaded={!isLoading}>
-                                <Text>Clicks: {l.clicks}</Text>
-                            </SkeletonText>
+                                <SkeletonText
+                                    isLoaded={!isLoading}
+                                    noOfLines={2}
+                                    spacing={2}
+                                    mt={isLoading && 3}>
+                                    <Text>
+                                        Destination:{" "}
+                                        <Link
+                                            href={l.dest}
+                                            isExternal
+                                            variant="cool"
+                                            noOfLines={1}>
+                                            {l.dest}
+                                        </Link>
+                                    </Text>
+                                </SkeletonText>
 
-                            <SkeletonText isLoaded={!isLoading}>
-                                <Text>
-                                    Created at:{" "}
-                                    {new Date(l.timestamp).toLocaleString()}
-                                </Text>
-                            </SkeletonText>
-                        </Card>
-                    ))}
+                                <SkeletonText
+                                    isLoaded={!isLoading}
+                                    noOfLines={1}
+                                    spacing={1}
+                                    mt={isLoading && 3}>
+                                    <Text>Clicks: {l.clicks}</Text>
+                                </SkeletonText>
+
+                                <SkeletonText
+                                    isLoaded={!isLoading}
+                                    noOfLines={1}
+                                    spacing={1}
+                                    mt={isLoading && 3}>
+                                    <Text>
+                                        Created at:{" "}
+                                        {new Date(l.timestamp).toLocaleString()}
+                                    </Text>
+                                </SkeletonText>
+                            </Card>
+                        ))}
                 </SimpleGrid>
+            ) : links?.length === 0 ? (
+                <Center as="main" h={["69vh", null, "80vh"]}>
+                    <Heading textAlign="center">
+                        you don't have any links
+                        <br />
+                        go create some
+                    </Heading>
+                </Center>
             ) : (
                 <Loader h={["69vh", null, "80vh"]} />
             )}
 
             <Portal containerRef={navRef}>
+                <Menu closeOnSelect={false} isLazy>
+                    <MenuButton
+                        as={IconButton}
+                        size="sm"
+                        aria-label="Sort by"
+                        icon={
+                            order === "asc" ? (
+                                <FaSortAmountDownAlt size="1.125rem" />
+                            ) : (
+                                <FaSortAmountUpAlt size="1.125rem" />
+                            )
+                        }
+                        mr={2}
+                    />
+                    <MenuList>
+                        <MenuOptionGroup
+                            onChange={x => setSort(x as any)}
+                            defaultValue={sort}
+                            type="radio"
+                            title="Sort by">
+                            <MenuItemOption value="date">
+                                Date created
+                            </MenuItemOption>
+                            <MenuItemOption value="clicks">
+                                Clicks
+                            </MenuItemOption>
+                        </MenuOptionGroup>
+                        <MenuDivider />
+                        <MenuOptionGroup
+                            onChange={x => setOrder(x as any)}
+                            defaultValue={order}
+                            type="radio"
+                            title="Order">
+                            <MenuItemOption
+                                value="asc"
+                                icon={<FaSortAmountDownAlt size="1.125rem" />}>
+                                Ascending
+                            </MenuItemOption>
+                            <MenuItemOption
+                                value="desc"
+                                icon={<FaSortAmountUpAlt size="1.125rem" />}>
+                                Descending
+                            </MenuItemOption>
+                        </MenuOptionGroup>
+                    </MenuList>
+                </Menu>
                 <IconButton
                     aria-label="refresh"
                     size="sm"
