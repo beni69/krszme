@@ -6,6 +6,8 @@ import {
     Text,
     useColorModeValue,
 } from "@chakra-ui/react";
+import { FaGithub } from "react-icons/fa";
+import SocialButton from "./SocialButton";
 
 const Footer = ({ h }) => (
     <Box
@@ -24,12 +26,15 @@ const Footer = ({ h }) => (
             direction={{ base: "column", md: "row" }}
             spacing={4}
             justify={{ base: "center", md: "space-between" }}
-            align={{ base: "center", md: "center" }}>
+            align="center">
             <Text align="center">
                 © 2021 The Karesz Foundation. All rights reserved
             </Text>
-            <Stack direction="row" spacing={6}>
+            <Stack direction="row" spacing={6} align="center">
                 <Link href="/terms">Legal stuff</Link>
+                <SocialButton label="GitHub" href="https://krsz.me/github">
+                    <FaGithub />
+                </SocialButton>
             </Stack>
         </Container>
     </Box>
