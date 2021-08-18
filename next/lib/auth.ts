@@ -11,7 +11,7 @@ export const auth = app.auth();
 export const getUser = () => USER;
 
 export const getToken = (forceRefresh = false) =>
-    auth.currentUser.getIdToken(forceRefresh).catch(() => null);
+    auth.currentUser?.getIdToken(forceRefresh).catch(() => null);
 
 export const authState = () => {
     switch (USER) {
