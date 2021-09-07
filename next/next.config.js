@@ -7,9 +7,7 @@ const config = {
         dest: "public",
     },
 
-    future: {
-        webpack5: true,
-    },
+    webpack5: true,
 };
 
 module.exports = PROD ? withPWA(config) : config;
