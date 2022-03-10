@@ -7,10 +7,10 @@ import { IconContext } from "react-icons";
 import Footer from "../components/footer";
 import Loader from "../components/loader";
 import Nav from "../components/nav";
-import { logPage } from "../lib/analytics";
 import auth, { AuthContext } from "../lib/auth";
 import theme from "../lib/theme";
 import "../styles/globals.css";
+import PlausibleProvider from "next-plausible";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
     const PROD = process.env.NODE_ENV === "production";
@@ -22,53 +22,49 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     const footerHeight = ["8rem", null, "3.5rem"];
     const navRef = useRef(null);
 
-    useEffect(() => {
-        if (!PROD) return;
-
-        router.events.on("routeChangeComplete", logPage);
-
-        logPage(window.location.pathname);
-
-        return () => {
-            router.events.off("routeChangeComplete", logPage);
-        };
-    }, []);
-
     return (
         <>
             <Head>
                 <title>krsz.me</title>
             </Head>
 
-            {/* chakra ui */}
-            <ChakraProvider theme={theme}>
-                {/* react icons */}
-                <IconContext.Provider
-                    value={{ style: { verticalAlign: "middle" } }}>
-                    {/* custom firebase auth context */}
-                    <AuthContext.Provider value={user}>
-                        {user !== undefined ? (
-                            <Box
-                                id="page-container"
-                                pos="relative"
-                                minH="100vh">
+            <PlausibleProvider
+                domain="app.krsz.me"
+                customDomain="https://analytics.karesz.xyz"
+                selfHosted>
+                {/* chakra ui */}
+                <ChakraProvider theme={theme}>
+                    {/* react icons */}
+                    <IconContext.Provider
+                        value={{ style: { verticalAlign: "middle" } }}>
+                        {/* custom firebase auth context */}
+                        <AuthContext.Provider value={user}>
+                            {user !== undefined ? (
                                 <Box
-                                    id="content=wrap"
-                                    minH="100vh"
-                                    pb={footerHeight}>
-                                    <Nav navRef={navRef} />
+                                    id="page-container"
+                                    pos="relative"
+                                    minH="100vh">
+                                    <Box
+                                        id="content=wrap"
+                                        minH="100vh"
+                                        pb={footerHeight}>
+                                        <Nav navRef={navRef} />
 
-                                    <Component {...pageProps} navRef={navRef} />
+                                        <Component
+                                            {...pageProps}
+                                            navRef={navRef}
+                                        />
+                                    </Box>
+
+                                    <Footer h={footerHeight} />
                                 </Box>
-
-                                <Footer h={footerHeight} />
-                            </Box>
-                        ) : (
-                            <Loader h="100vh" w="100vw" />
-                        )}
-                    </AuthContext.Provider>
-                </IconContext.Provider>
-            </ChakraProvider>
+                            ) : (
+                                <Loader h="100vh" w="100vw" />
+                            )}
+                        </AuthContext.Provider>
+                    </IconContext.Provider>
+                </ChakraProvider>
+            </PlausibleProvider>
         </>
     );
 }

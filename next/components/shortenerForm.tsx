@@ -3,7 +3,6 @@ import { Formik, FormikHelpers } from "formik";
 import { InputControl, SubmitButton } from "formik-chakra-ui";
 import { useRouter } from "next/router";
 import * as Yup from "yup";
-import analytics from "../lib/analytics";
 import { newLink } from "../lib/api";
 import { ButtonToast } from "./toastWithButton";
 
@@ -88,13 +87,10 @@ const ShortenerForm = () => {
                     });
                     break;
             }
-            analytics().logEvent("create_link_error");
             return console.error("krsz.me api error:", JSON.stringify(data));
         }
 
         console.info("krsz.me api response", data);
-
-        analytics().logEvent("create_link");
 
         toast({
             status: "success",
