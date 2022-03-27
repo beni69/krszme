@@ -87,13 +87,7 @@ const LinkMenu = (props: BoxProps & { link: url }) => {
                         icon={<HamburgerIcon />}
                     />
 
-                    <MenuList
-                        rootProps={{
-                            style: {
-                                right: 0,
-                            },
-                        }}
-                        className="bruh">
+                    <MenuList>
                         <MenuItem icon={<CopyIcon />} onClick={onCopy}>
                             Copy link
                         </MenuItem>
@@ -200,13 +194,14 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
                     as="main"
                     spacing={16}
                     minChildWidth={["240px", "360px"]}
-                    m={[8, null, 16]}>
+                    m={[8, null, 16]}
+                    overflow="hidden" // prevent a useless horizontal scrollbar
+                >
                     {(links as url[])
                         .sort((a, b) => {
-                            let value;
+                            let value: number;
                             switch (sort) {
                                 case "date":
-                                    //@ts-ignore
                                     value =
                                         new Date(a.timestamp).getTime() -
                                         new Date(b.timestamp).getTime();
@@ -220,7 +215,7 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
                             else return value * -1;
                         })
                         .map(l => (
-                            <Card pos="relative">
+                            <Card pos="relative" key={l._id}>
                                 <LinkMenu
                                     link={l}
                                     pos="absolute"
