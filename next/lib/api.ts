@@ -1,13 +1,13 @@
 import { useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import useSWR from "swr";
-import { getToken, getUser } from "./auth";
+import { getToken } from "./auth";
 
 const API = "https://krsz.me";
 
 const fetcher = async (url: string, user: string) => {
     const token = await getToken();
-    const res = await fetch(url, {
+    const res = await fetch(API + url, {
         headers: {
             "content-type": "application/json",
             token,
@@ -26,24 +26,20 @@ export const useLinks = () => {
         onCloseComplete: () => setTimeout(() => setSlowToastOpen(false), 5000),
     });
 
-    const { data, error, mutate } = useSWR(
-        [`${API}/api/url/me`, getUser().uid],
-        fetcher,
-        {
-            refreshInterval: 15000, // refresh every 15sec
-            onSuccess: () => setLoading(false),
-            onLoadingSlow: () => {
-                if (slowToastOpen) return;
-                toast({
-                    status: "info",
-                    title: "Taking too long?",
-                    description:
-                        "Our server could be down. Or your internet is just bad. I have no idea",
-                });
-                setSlowToastOpen(true);
-            },
-        }
-    );
+    const { data, error, mutate } = useSWR<url[]>("/api/url/me", fetcher, {
+        refreshInterval: 15000, // refresh every 15sec
+        onSuccess: () => setLoading(false),
+        onLoadingSlow: () => {
+            if (slowToastOpen) return;
+            toast({
+                status: "info",
+                title: "Taking too long?",
+                description:
+                    "Our server could be down. Or your internet is just bad. I have no idea",
+            });
+            setSlowToastOpen(true);
+        },
+    });
     const [slowToastOpen, setSlowToastOpen] = useState(false);
     const [loading, setLoading] = useState(!error && !data);
 

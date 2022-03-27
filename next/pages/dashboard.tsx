@@ -40,11 +40,12 @@ import { MutableRefObject, useContext, useRef, useState } from "react";
 import { FaSortAmountDownAlt, FaSortAmountUpAlt } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 import { ImQrcode } from "react-icons/im";
+import { useSWRConfig } from "swr";
 import Card from "../components/card";
 import withTitle from "../components/HOC/withTitle";
 import Link from "../components/link";
 import Loader from "../components/loader";
-import { useLinks } from "../lib/api";
+import { deleteLink, useLinks } from "../lib/api";
 import { AuthContext, withAuth } from "../lib/auth";
 
 const LinkMenu = (props: BoxProps & { link: url }) => {
@@ -62,11 +63,15 @@ const LinkMenu = (props: BoxProps & { link: url }) => {
     if (hasCopied) toast();
 
     // delete
+    const { mutate } = useSWRConfig();
     const leastDestructiveRef = useRef();
     const [isDelOpen, setIsDelOpen] = useState(false);
     const onDelClose = () => setIsDelOpen(false);
-    const onDelete = () => {
+    const onDelete = async () => {
         onDelClose();
+        await deleteLink(link);
+        toast({ title: "Link deleted" });
+        mutate("/api/url/me"); // invalidate cache => refresh
     };
 
     // qrcode
@@ -181,12 +186,6 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
     const [sort, setSort] = useState<"date" | "clicks">("date");
     const [order, setOrder] = useState<"asc" | "desc">("asc");
 
-    const toast = useToast({
-        variant: "solid",
-        position: "bottom",
-        isClosable: true,
-    });
-
     return (
         <>
             {links?.length ? (
@@ -197,7 +196,7 @@ const Dashboard = ({ navRef }: { navRef: MutableRefObject<any> }) => {
                     m={[8, null, 16]}
                     overflow="hidden" // prevent a useless horizontal scrollbar
                 >
-                    {(links as url[])
+                    {links
                         .sort((a, b) => {
                             let value: number;
                             switch (sort) {
