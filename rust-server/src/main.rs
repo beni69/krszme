@@ -1,4 +1,5 @@
 mod db;
+mod jwt;
 mod logger;
 #[macro_use]
 extern crate log;
