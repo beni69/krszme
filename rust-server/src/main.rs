@@ -3,6 +3,7 @@ mod jwt;
 mod logger;
 #[macro_use]
 extern crate log;
+use crate::jwt::verify;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use mongodb::{options::ClientOptions, Client};
 use std::{env, sync::Mutex};
@@ -10,6 +11,16 @@ use std::{env, sync::Mutex};
 #[get("/")]
 async fn index() -> impl Responder {
     "Hello world!"
+}
+
+#[get("/user/{jwt}")]
+async fn user(jwt: web::Path<String>) -> impl Responder {
+    match verify(&jwt).await {
+        Ok(u) => debug!("{:#?}", u),
+        Err(e) => error!("{e}"),
+    };
+
+    "hi"
 }
 
 #[get("/{code}")]
@@ -33,7 +44,7 @@ const DEFAULT_PORT: u16 = 8080;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    logger::init_log(Some("actix_web=info,krszme_server=info"));
+    logger::init_log(Some("actix_web=info,krszme_server=debug"));
     let port: u16 = env::var("PORT")
         .unwrap_or(DEFAULT_PORT.to_string())
         .parse()
@@ -57,6 +68,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(client.clone())
             .wrap(logger::actix_log())
             .service(index)
+            .service(user)
             .service(with_code)
     })
     .bind(("0.0.0.0", port))?
