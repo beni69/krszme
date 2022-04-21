@@ -1,25 +1,35 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use reqwest;
-use serde::Deserialize;
-use std::{env, str::FromStr};
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, env, str::FromStr};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub name: String,
+    pub picture: String,
     pub user_id: String,
+    pub email: String,
+    pub email_verified: bool,
+    pub firebase: Firebase,
+    pub auth_time: usize,
     pub aud: String,
     pub exp: usize,
     pub iat: usize,
     pub iss: String,
     pub sub: String,
 }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Firebase {
+    pub identities: HashMap<String, Vec<String>>,
+    pub sign_in_provider: String,
+}
 
 pub async fn verify(token: &str) -> Result<User> {
     let kid = match decode_header(token).map(|h| h.kid) {
         Ok(Some(header)) => header,
         Err(e) => return Err(e.into()),
-        _ => return Err(anyhow::anyhow!("Invalid token")),
+        _ => return Err(anyhow!("Invalid token")),
     };
 
     let key = fetch_jwk(&kid).await?;
@@ -36,6 +46,35 @@ pub async fn verify(token: &str) -> Result<User> {
     );
 
     Ok(user?.claims)
+}
+
+#[macro_export]
+macro_rules! verify_req {
+    ($token:expr) => {{
+        let auth = match $token.headers().get(header::AUTHORIZATION) {
+            Some(h) => match h.to_str() {
+                Ok(s) => s,
+                Err(_) => return Err(ApiError::BadJwt),
+            },
+            None => return Err(ApiError::BadJwt),
+        };
+        let mut auth = auth.split_whitespace();
+        let prefix = match auth.next() {
+            Some(x) => x,
+            None => return Err(ApiError::BadJwt),
+        };
+        if prefix != "firebase" {
+            return Err(ApiError::BadJwt);
+        }
+        let jwt = match auth.next() {
+            Some(x) => x,
+            None => return Err(ApiError::BadJwt),
+        };
+        match verify(&jwt).await {
+            Ok(u) => u,
+            Err(_) => return Err(ApiError::BadJwt),
+        }
+    }};
 }
 
 #[derive(Debug)]
@@ -55,7 +94,7 @@ pub fn get_jwk_conf() -> JwkConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct JwkKey {
     pub e: String,
     pub alg: String,
@@ -76,6 +115,6 @@ async fn fetch_jwk(kid: &str) -> Result<JwkKey> {
     let body = res.json::<KeyResponse>().await?;
     match body.keys.iter().find(|k| k.kid == kid) {
         Some(k) => Ok(k.clone()),
-        None => Err(anyhow::anyhow!("public key not found")),
+        None => Err(anyhow!("public key not found")),
     }
 }

@@ -1,10 +1,15 @@
+mod apierror;
 mod db;
 mod jwt;
 mod logger;
 #[macro_use]
 extern crate log;
-use crate::jwt::verify;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use crate::{
+    apierror::{ApiError, Response},
+    db::{get_link, get_links, update_link, MongoClient},
+    jwt::verify,
+};
+use actix_web::{get, http::header, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use mongodb::{options::ClientOptions, Client};
 use std::{env, sync::Mutex};
 
@@ -13,30 +18,37 @@ async fn index() -> impl Responder {
     "Hello world!"
 }
 
-#[get("/user/{jwt}")]
-async fn user(jwt: web::Path<String>) -> impl Responder {
-    match verify(&jwt).await {
-        Ok(u) => debug!("{:#?}", u),
-        Err(e) => error!("{e}"),
-    };
-
-    "hi"
+#[get("/user/me")]
+async fn user_me(req: HttpRequest) -> Response {
+    Ok(HttpResponse::Ok().json(verify_req!(req)))
 }
 
-#[get("/{code}")]
-async fn with_code(client: web::Data<Mutex<Client>>, code: web::Path<String>) -> impl Responder {
-    let link = db::get_link(&client, &code.to_string()).await;
+#[get("/url/me")]
+async fn url_me(client: MongoClient, req: HttpRequest) -> Response {
+    let user = verify_req!(req);
+    let links = get_links(client, &user.user_id).await.unwrap();
+    Ok(HttpResponse::Ok().json(links))
+}
 
-    if let Err(_) = link {
-        return HttpResponse::NotFound().body(format!("{} not found", code));
-    }
-    let link = link.unwrap();
+// TODO: implement more routes
+// #[get("/url/{code}")]
+// #[delete("/url/{code}")]
+// #[post("/url/create")]
+
+#[get("/{code}")]
+async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Responder {
+    let link = match get_link(&client, &code.to_string()).await {
+        Ok(link) => link,
+        Err(_) => return HttpResponse::NotFound().body(format!("{code} not found")),
+    };
+
+    // this way we don't have to wait for the db update before redirecting
     let client_ref = client.clone();
     let link_ref = link.clone();
-    actix_web::rt::spawn(async move { db::update_link(client_ref, link_ref).await });
+    actix_web::rt::spawn(async move { update_link(client_ref, link_ref).await });
 
     HttpResponse::PermanentRedirect()
-        .append_header(("location", link.url))
+        .append_header(("location", link.dest))
         .finish()
 }
 
@@ -68,7 +80,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(client.clone())
             .wrap(logger::actix_log())
             .service(index)
-            .service(user)
+            .service(user_me)
+            .service(url_me)
             .service(with_code)
     })
     .bind(("0.0.0.0", port))?
