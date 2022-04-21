@@ -9,7 +9,7 @@ ARG APP_NAME="krszme_server"
 WORKDIR /src
 
 RUN USER=root cargo init --bin
-COPY ./Cargo.toml ./Cargo.toml
+COPY ./Cargo.* ./
 RUN cargo build --target x86_64-unknown-linux-musl --release \ 
     && rm -rf src
 
