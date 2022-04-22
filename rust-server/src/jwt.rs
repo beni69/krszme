@@ -1,3 +1,4 @@
+use actix_web::{http::header, HttpRequest};
 use anyhow::{anyhow, Result};
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use reqwest;
@@ -48,31 +49,38 @@ pub async fn verify(token: &str) -> Result<User> {
     Ok(user?.claims)
 }
 
+pub async fn auth_optional(req: &HttpRequest) -> Option<User> {
+    let auth = match req.headers().get(header::AUTHORIZATION) {
+        Some(h) => match h.to_str() {
+            Ok(s) => s,
+            Err(_) => return None,
+        },
+        None => return None,
+    };
+    let mut auth = auth.split_whitespace();
+    let prefix = match auth.next() {
+        Some(x) => x,
+        None => return None,
+    };
+    if prefix != "firebase" {
+        return None;
+    }
+    let jwt = match auth.next() {
+        Some(x) => x,
+        None => return None,
+    };
+    match verify(&jwt).await {
+        Ok(u) => Some(u),
+        Err(_) => return None,
+    }
+}
+
 #[macro_export]
-macro_rules! verify_req {
+macro_rules! auth_force {
     ($token:expr) => {{
-        let auth = match $token.headers().get(header::AUTHORIZATION) {
-            Some(h) => match h.to_str() {
-                Ok(s) => s,
-                Err(_) => return Err(ApiError::BadJwt),
-            },
-            None => return Err(ApiError::BadJwt),
-        };
-        let mut auth = auth.split_whitespace();
-        let prefix = match auth.next() {
-            Some(x) => x,
-            None => return Err(ApiError::BadJwt),
-        };
-        if prefix != "firebase" {
-            return Err(ApiError::BadJwt);
-        }
-        let jwt = match auth.next() {
-            Some(x) => x,
-            None => return Err(ApiError::BadJwt),
-        };
-        match verify(&jwt).await {
-            Ok(u) => u,
-            Err(_) => return Err(ApiError::BadJwt),
+        match crate::jwt::auth_optional(&$token).await {
+            Some(u) => u,
+            None => return Err(crate::ApiError::BadJwt),
         }
     }};
 }

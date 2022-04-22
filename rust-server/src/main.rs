@@ -6,11 +6,14 @@ mod logger;
 extern crate log;
 use crate::{
     apierror::{ApiError, Response},
-    db::{get_link, get_links, update_link, MongoClient},
-    jwt::verify,
+    db::{delete_link, get_link, get_links, update_link, Link, LinkTiny, MongoClient},
+    jwt::auth_optional,
 };
-use actix_web::{get, http::header, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{delete, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use mongodb::{options::ClientOptions, Client};
+use nanoid::nanoid;
+use regex::Regex;
+use serde::Deserialize;
 use std::{env, sync::Mutex};
 
 #[get("/")]
@@ -20,24 +23,120 @@ async fn index() -> impl Responder {
 
 #[get("/user/me")]
 async fn user_me(req: HttpRequest) -> Response {
-    Ok(HttpResponse::Ok().json(verify_req!(req)))
+    Ok(HttpResponse::Ok().json(auth_force!(req)))
 }
 
 #[get("/url/me")]
 async fn url_me(client: MongoClient, req: HttpRequest) -> Response {
-    let user = verify_req!(req);
-    let links = get_links(client, &user.user_id).await.unwrap();
+    let user = auth_force!(req);
+    let links = get_links(&client, &user.user_id).await.unwrap();
     Ok(HttpResponse::Ok().json(links))
 }
 
-// TODO: implement more routes
-// #[get("/url/{code}")]
-// #[delete("/url/{code}")]
-// #[post("/url/create")]
+#[get("/url/{code}")]
+async fn get_url_code(client: MongoClient, code: web::Path<String>, req: HttpRequest) -> Response {
+    let user = auth_optional(&req).await;
+    let link = match get_link(&client, &code).await {
+        Ok(link) => link,
+        Err(_) => return Err(ApiError::NotFound),
+    };
+
+    if user.is_some()
+        && link.user_id.is_some()
+        && user.unwrap().user_id == link.user_id.clone().unwrap()
+    {
+        Ok(HttpResponse::Ok().json(link))
+    } else {
+        Ok(HttpResponse::Ok().json(LinkTiny {
+            id: link.id,
+            dest: link.dest,
+            url: link.url,
+        }))
+    }
+}
+
+#[delete("/url/{code}")]
+async fn delete_url_code(
+    client: MongoClient,
+    code: web::Path<String>,
+    req: HttpRequest,
+) -> Response {
+    let user = auth_force!(req);
+    let link = match get_link(&client, &code).await {
+        Ok(link) => link,
+        Err(_) => return Err(ApiError::NotFound),
+    };
+    if link.user_id.is_some() && user.user_id == link.user_id.clone().unwrap() {
+        if let Err(_) = delete_link(&client, &code).await {
+            return Err(ApiError::InternalServerError);
+        }
+        Ok(HttpResponse::Ok().json(link))
+    } else {
+        Err(ApiError::BadJwt)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct CreateLinkData {
+    dest: Option<String>,
+    code: Option<String>,
+}
+#[post("/url/create")]
+async fn create_link(
+    client: MongoClient,
+    req: HttpRequest,
+    data: web::Json<CreateLinkData>,
+) -> Response {
+    let data = data.0;
+    debug!("{data:#?}");
+    if data.dest.is_none() {
+        return Err(ApiError::DestInvalid);
+    }
+
+    let code: String = if let Some(code) = data.code {
+        if RESERVED_WORDS.iter().any(|x| x == &code) {
+            return Err(ApiError::CodeReserved);
+        }
+        if !CODE_RE.is_match(&code) {
+            return Err(ApiError::CodeInvalid);
+        }
+        if get_link(&client, &code).await.is_ok() {
+            return Err(ApiError::CodeTaken);
+        }
+        code
+    } else {
+        let mut code: String;
+        loop {
+            code = nanoid!(CODE_LENGTH, ALPHABET);
+            if get_link(&client, &code).await.is_err() {
+                break;
+            }
+        }
+        code
+    };
+
+    let user = auth_optional(&req).await;
+    let user_id = if user.is_some() {
+        Some(user.unwrap().user_id)
+    } else {
+        None
+    };
+    let link = Link {
+        url: format!("{}/{}", env::var("BASE_URL").unwrap(), &code),
+        id: code,
+        dest: data.dest.unwrap(),
+        user_id,
+        clicks: 0,
+    };
+    // TODO: add link to db
+    // TODO: test
+
+    Err(ApiError::InternalServerError)
+}
 
 #[get("/{code}")]
 async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Responder {
-    let link = match get_link(&client, &code.to_string()).await {
+    let link = match get_link(&client, &code).await {
         Ok(link) => link,
         Err(_) => return HttpResponse::NotFound().body(format!("{code} not found")),
     };
@@ -45,7 +144,7 @@ async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Respond
     // this way we don't have to wait for the db update before redirecting
     let client_ref = client.clone();
     let link_ref = link.clone();
-    actix_web::rt::spawn(async move { update_link(client_ref, link_ref).await });
+    actix_web::rt::spawn(async move { update_link(&client_ref, &link_ref).await });
 
     HttpResponse::PermanentRedirect()
         .append_header(("location", link.dest))
@@ -53,6 +152,19 @@ async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Respond
 }
 
 const DEFAULT_PORT: u16 = 8080;
+const RESERVED_WORDS: &[&str] = &[
+    "api", "app", "home", "login", "me", "signin", "signup", "test", "url", "user",
+];
+const ALPHABET: &[char] = &[
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+    'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
+    'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+    'v', 'w', 'x', 'y', 'z',
+];
+const CODE_LENGTH: usize = 5;
+lazy_static::lazy_static! {
+    static ref CODE_RE: Regex = Regex::new(r"^[\w\d\.]{3,32}$").unwrap();
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -82,6 +194,9 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(user_me)
             .service(url_me)
+            .service(get_url_code)
+            .service(delete_url_code)
+            .service(create_link)
             .service(with_code)
     })
     .bind(("0.0.0.0", port))?

@@ -6,6 +6,10 @@ use std::sync::Mutex;
 
 pub type MongoClient = web::Data<Mutex<Client>>;
 
+lazy_static::lazy_static! {
+    static ref DB_NAME: String = std::env::var("DB_NAME").unwrap_or("krszme-test".into());
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Link {
     #[serde(rename = "_id")]
@@ -14,14 +18,28 @@ pub struct Link {
     pub dest: String,
     pub url: String,
     #[serde(rename = "userID")]
-    pub user_id: String,
+    pub user_id: Option<String>,
+}
+#[derive(Debug, Serialize)]
+pub struct LinkTiny {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub dest: String,
+    pub url: String,
+}
+
+macro_rules! collection {
+    ($client:expr) => {{
+        $client
+            .lock()
+            .unwrap()
+            .database(&DB_NAME)
+            .collection::<Link>("urls")
+    }};
 }
 
 pub async fn get_link(client: &MongoClient, code: &str) -> Result<Link> {
-    let client = client.lock().unwrap();
-    match client
-        .database("krszme-test")
-        .collection::<Link>("urls")
+    match collection!(client)
         .find_one(doc! { "_id": code }, None)
         .await?
     {
@@ -29,11 +47,8 @@ pub async fn get_link(client: &MongoClient, code: &str) -> Result<Link> {
         None => Err(anyhow!("Link not found")),
     }
 }
-pub async fn get_links(client: MongoClient, uid: &str) -> Result<Vec<Link>> {
-    let client = client.lock().unwrap();
-    let mut links = client
-        .database("krszme-test")
-        .collection::<Link>("urls")
+pub async fn get_links(client: &MongoClient, uid: &str) -> Result<Vec<Link>> {
+    let mut links = collection!(client)
         .find(doc! { "userID": uid }, None)
         .await?;
 
@@ -43,17 +58,23 @@ pub async fn get_links(client: MongoClient, uid: &str) -> Result<Vec<Link>> {
     }
     Ok(v)
 }
-
-pub async fn update_link(client: MongoClient, link: Link) -> Result<()> {
-    let client = client.lock().unwrap();
-    client
-        .database("krszme-test")
-        .collection::<Link>("urls")
+pub async fn update_link(client: &MongoClient, link: &Link) -> Result<()> {
+    collection!(client)
         .update_one(
-            doc! { "_id": link.id.clone() },
+            doc! { "_id": &link.id },
             doc! { "$set": {"clicks": link.clicks + 1 } },
             None,
         )
         .await?;
+    Ok(())
+}
+pub async fn delete_link(client: &MongoClient, code: &str) -> Result<()> {
+    collection!(client)
+        .delete_one(doc! { "_id": code }, None)
+        .await?;
+    Ok(())
+}
+pub async fn create_link(client: &MongoClient, link: &Link) -> Result<()> {
+    collection!(client).insert_one(link, None).await?;
     Ok(())
 }

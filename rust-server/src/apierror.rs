@@ -6,9 +6,10 @@ pub type Result<T> = std::result::Result<T, ApiError>;
 pub type Response = Result<HttpResponse>;
 
 #[derive(Debug)]
-#[allow(dead_code)] // TODO: remove
+#[allow(dead_code)]
 pub enum ApiError {
     NotFound,
+    InternalServerError,
     BadJwt,
     DestInvalid,
     CodeInvalid,
@@ -19,6 +20,7 @@ impl ApiError {
     pub fn status(&self) -> StatusCode {
         match self {
             ApiError::NotFound => StatusCode::NOT_FOUND,
+            ApiError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::BadJwt => StatusCode::UNAUTHORIZED,
             ApiError::CodeTaken => StatusCode::CONFLICT,
             ApiError::CodeReserved => StatusCode::CONFLICT,
@@ -28,6 +30,7 @@ impl ApiError {
     pub fn code(&self) -> u16 {
         match self {
             ApiError::NotFound => 404,
+            ApiError::InternalServerError => 500,
             ApiError::BadJwt => 10000,
             ApiError::DestInvalid => 10001,
             ApiError::CodeInvalid => 10002,
@@ -43,6 +46,7 @@ impl Display for ApiError {
             "{}",
             match self {
                 ApiError::NotFound => "not found",
+                ApiError::InternalServerError => "internal server error",
                 ApiError::BadJwt => "Invalid or missing jwt token",
                 ApiError::DestInvalid => "Destination invalid",
                 ApiError::CodeInvalid => "Code invalid",
