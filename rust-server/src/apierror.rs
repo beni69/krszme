@@ -6,7 +6,6 @@ pub type Result<T> = std::result::Result<T, ApiError>;
 pub type Response = Result<HttpResponse>;
 
 #[derive(Debug)]
-#[allow(dead_code)]
 pub enum ApiError {
     NotFound,
     InternalServerError,

@@ -6,7 +6,7 @@ mod logger;
 extern crate log;
 use crate::{
     apierror::{ApiError, Response},
-    db::{delete_link, get_link, get_links, update_link, Link, LinkTiny, MongoClient},
+    db::{create_link, delete_link, get_link, get_links, update_link, Link, LinkTiny, MongoClient},
     jwt::auth_optional,
 };
 use actix_web::{delete, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
@@ -82,14 +82,18 @@ struct CreateLinkData {
     code: Option<String>,
 }
 #[post("/url/create")]
-async fn create_link(
+async fn post_create_link(
     client: MongoClient,
     req: HttpRequest,
     data: web::Json<CreateLinkData>,
 ) -> Response {
     let data = data.0;
     debug!("{data:#?}");
-    if data.dest.is_none() {
+    let dest = match data.dest {
+        Some(dest) => dest,
+        None => return Err(ApiError::DestInvalid),
+    };
+    if !URL_RE.is_match(&dest) {
         return Err(ApiError::DestInvalid);
     }
 
@@ -116,22 +120,22 @@ async fn create_link(
     };
 
     let user = auth_optional(&req).await;
-    let user_id = if user.is_some() {
-        Some(user.unwrap().user_id)
-    } else {
-        None
+    let user_id = match user {
+        Some(user) => Some(user.user_id),
+        None => None,
     };
     let link = Link {
-        url: format!("{}/{}", env::var("BASE_URL").unwrap(), &code),
+        url: format!("{}/{}", BASE_URL.as_str(), &code),
         id: code,
-        dest: data.dest.unwrap(),
+        dest,
         user_id,
         clicks: 0,
     };
-    // TODO: add link to db
-    // TODO: test
 
-    Err(ApiError::InternalServerError)
+    match create_link(&client, &link).await {
+        Ok(_) => Ok(HttpResponse::Ok().json(link)),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
 }
 
 #[get("/{code}")]
@@ -164,6 +168,8 @@ const ALPHABET: &[char] = &[
 const CODE_LENGTH: usize = 5;
 lazy_static::lazy_static! {
     static ref CODE_RE: Regex = Regex::new(r"^[\w\d\.]{3,32}$").unwrap();
+    static ref URL_RE: Regex = Regex::new(r"^(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+$").unwrap();
+    static ref BASE_URL: String = env::var("BASE_URL").unwrap_or("https://krsz.me".into());
 }
 
 #[actix_web::main]
@@ -196,7 +202,7 @@ async fn main() -> std::io::Result<()> {
             .service(url_me)
             .service(get_url_code)
             .service(delete_url_code)
-            .service(create_link)
+            .service(post_create_link)
             .service(with_code)
     })
     .bind(("0.0.0.0", port))?
