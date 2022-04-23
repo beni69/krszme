@@ -9,6 +9,7 @@ use crate::{
     db::{create_link, delete_link, get_link, get_links, update_link, Link, LinkTiny, MongoClient},
     jwt::auth_optional,
 };
+use actix_cors::Cors;
 use actix_web::{delete, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use mongodb::{options::ClientOptions, Client};
 use nanoid::nanoid;
@@ -197,6 +198,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client.clone())
             .wrap(logger::actix_log())
+            .wrap(Cors::default().supports_credentials())
             .service(index)
             .service(user_me)
             .service(url_me)
