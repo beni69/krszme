@@ -21,19 +21,19 @@ async fn index() -> impl Responder {
     "Hello world!"
 }
 
-#[get("/user/me")]
+#[get("/api/user/me")]
 async fn user_me(req: HttpRequest) -> Response {
     Ok(HttpResponse::Ok().json(auth_force!(req)))
 }
 
-#[get("/url/me")]
+#[get("/api/url/me")]
 async fn url_me(client: MongoClient, req: HttpRequest) -> Response {
     let user = auth_force!(req);
     let links = get_links(&client, &user.user_id).await.unwrap();
     Ok(HttpResponse::Ok().json(links))
 }
 
-#[get("/url/{code}")]
+#[get("/api/url/{code}")]
 async fn get_url_code(client: MongoClient, code: web::Path<String>, req: HttpRequest) -> Response {
     let user = auth_optional(&req).await;
     let link = match get_link(&client, &code).await {
@@ -55,7 +55,7 @@ async fn get_url_code(client: MongoClient, code: web::Path<String>, req: HttpReq
     }
 }
 
-#[delete("/url/{code}")]
+#[delete("/api/url/{code}")]
 async fn delete_url_code(
     client: MongoClient,
     code: web::Path<String>,
@@ -81,7 +81,7 @@ struct CreateLinkData {
     dest: Option<String>,
     code: Option<String>,
 }
-#[post("/url/create")]
+#[post("/api/url/create")]
 async fn post_create_link(
     client: MongoClient,
     req: HttpRequest,
