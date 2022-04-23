@@ -198,7 +198,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client.clone())
             .wrap(logger::actix_log())
-            .wrap(Cors::default().supports_credentials())
+            .wrap(Cors::permissive())
             .service(index)
             .service(user_me)
             .service(url_me)
