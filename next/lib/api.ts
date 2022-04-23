@@ -3,7 +3,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { getToken } from "./auth";
 
-const API = "https://krsz.me";
+const API = "https://krszme-umjuxb32wa-ew.a.run.app";
 
 const fetcher = async (url: string, user: string) => {
     const token = await getToken();
