@@ -1,6 +1,9 @@
 use actix_web::web;
 use anyhow::{anyhow, Result};
-use mongodb::{bson::doc, Client};
+use mongodb::{
+    bson::{doc, DateTime},
+    Client,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -19,6 +22,14 @@ pub struct Link {
     pub url: String,
     #[serde(rename = "userID")]
     pub user_id: Option<String>,
+    pub timestamp: DateTime,
+}
+impl Link {
+    pub fn json(&self) -> serde_json::Value {
+        let mut v = serde_json::to_value(self).unwrap();
+        v["timestamp"] = serde_json::Value::String(self.timestamp.to_rfc3339_string());
+        v
+    }
 }
 #[derive(Debug, Serialize)]
 pub struct LinkTiny {

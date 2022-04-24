@@ -11,7 +11,7 @@ use crate::{
 };
 use actix_cors::Cors;
 use actix_web::{delete, get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use mongodb::{options::ClientOptions, Client};
+use mongodb::{bson::DateTime, options::ClientOptions, Client};
 use nanoid::nanoid;
 use regex::Regex;
 use serde::Deserialize;
@@ -30,7 +30,12 @@ async fn user_me(req: HttpRequest) -> Response {
 #[get("/api/url/me")]
 async fn url_me(client: MongoClient, req: HttpRequest) -> Response {
     let user = auth_force!(req);
-    let links = get_links(&client, &user.user_id).await.unwrap();
+    let links = get_links(&client, &user.user_id)
+        .await
+        .unwrap()
+        .iter()
+        .map(|l| l.json())
+        .collect::<Vec<_>>();
     Ok(HttpResponse::Ok().json(links))
 }
 
@@ -46,7 +51,7 @@ async fn get_url_code(client: MongoClient, code: web::Path<String>, req: HttpReq
         && link.user_id.is_some()
         && user.unwrap().user_id == link.user_id.clone().unwrap()
     {
-        Ok(HttpResponse::Ok().json(link))
+        Ok(HttpResponse::Ok().json(link.json()))
     } else {
         Ok(HttpResponse::Ok().json(LinkTiny {
             id: link.id,
@@ -71,7 +76,7 @@ async fn delete_url_code(
         if let Err(_) = delete_link(&client, &code).await {
             return Err(ApiError::InternalServerError);
         }
-        Ok(HttpResponse::Ok().json(link))
+        Ok(HttpResponse::Ok().json(link.json()))
     } else {
         Err(ApiError::BadJwt)
     }
@@ -131,10 +136,11 @@ async fn post_create_link(
         dest,
         user_id,
         clicks: 0,
+        timestamp: DateTime::now(),
     };
 
     match create_link(&client, &link).await {
-        Ok(_) => Ok(HttpResponse::Ok().json(link)),
+        Ok(_) => Ok(HttpResponse::Ok().json(link.json())),
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
@@ -169,7 +175,7 @@ const ALPHABET: &[char] = &[
 const CODE_LENGTH: usize = 5;
 lazy_static::lazy_static! {
     static ref CODE_RE: Regex = Regex::new(r"^[\w\d\.]{3,32}$").unwrap();
-    static ref URL_RE: Regex = Regex::new(r"^(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+$").unwrap();
+    static ref URL_RE: Regex = Regex::new(r"^(https?://(?:[[:alnum:]]+\.)?[[:alnum:]]+\.com)(/\S*)?$").unwrap();
     static ref BASE_URL: String = env::var("BASE_URL").unwrap_or("https://krsz.me".into());
 }
 
