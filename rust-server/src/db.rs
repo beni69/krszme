@@ -10,7 +10,7 @@ use std::sync::Mutex;
 pub type MongoClient = web::Data<Mutex<Client>>;
 
 lazy_static::lazy_static! {
-    static ref DB_NAME: String = std::env::var("DB_NAME").unwrap_or("krszme-test".into());
+    static ref DB_NAME: String = std::env::var("DB_NAME").unwrap_or("krszme".into());
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
