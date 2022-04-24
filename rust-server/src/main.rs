@@ -19,7 +19,9 @@ use std::{env, sync::Mutex};
 
 #[get("/")]
 async fn index() -> impl Responder {
-    "Hello world!"
+    HttpResponse::PermanentRedirect()
+        .append_header(("location", "//app.krsz.me"))
+        .finish()
 }
 
 #[get("/api/user/me")]
@@ -149,7 +151,11 @@ async fn post_create_link(
 async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Responder {
     let link = match get_link(&client, &code).await {
         Ok(link) => link,
-        Err(_) => return HttpResponse::NotFound().body(format!("{code} not found")),
+        Err(_) => {
+            return HttpResponse::PermanentRedirect()
+                .append_header(("location", "//app.krsz.me/linknotfound"))
+                .finish()
+        }
     };
 
     // this way we don't have to wait for the db update before redirecting
