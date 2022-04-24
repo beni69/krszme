@@ -3,14 +3,13 @@ import { useState } from "react";
 import useSWR from "swr";
 import { getToken } from "./auth";
 
-const API = "https://krsz.me";
+const API = "https://krszme-6f6ahqabvq-ew.a.run.app";
 
 const fetcher = async (url: string, user: string) => {
-    const token = await getToken();
     const res = await fetch(API + url, {
         headers: {
             "content-type": "application/json",
-            token,
+            authorization: `firebase ${await getToken()}`,
         },
     });
     const data = await res.json();
@@ -58,7 +57,7 @@ export async function newLink(data: { url: string; code?: string }) {
         method: "POST",
         headers: {
             "Content-type": "application/json",
-            token: await getToken(),
+            authorization: `firebase ${await getToken()}`,
         },
         body: JSON.stringify(data),
     });
@@ -77,7 +76,7 @@ export async function deleteLink(link: url | string): Promise<[Response, any]> {
         method: "DELETE",
         headers: {
             "Content-type": "application/json",
-            token: await getToken(),
+            authorization: `firebase ${await getToken()}`,
         },
     });
 
@@ -93,7 +92,7 @@ export async function testAPI() {
         method: "GET",
         headers: {
             "Content-type": "application/json",
-            token: await getToken(),
+            authorization: `firebase ${await getToken()}`,
         },
     });
 

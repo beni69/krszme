@@ -14,7 +14,7 @@ are freely available to all, while others require authentication. In the docs,
 these routes are markd as `protected`. The firebase JWT token can be used to
 manually authenticate with the api, through http headers.
 
-`Token: 1234567890abcdefghijklmnopqrstuvwxyz`
+`Authorization: firebase <firebase_token>`
 
 _The only problem is that firebase JWTs aren't persistent. They can change by
 the minute making it very hard to create third party apps. I am planning on
