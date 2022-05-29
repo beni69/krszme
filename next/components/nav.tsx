@@ -20,6 +20,7 @@ import { useContext } from "react";
 import { AuthContext, signOut } from "../lib/auth";
 import Link from "./link";
 import ThemeSwitcher from "./themeSwitcher";
+import type { User } from "firebase/auth";
 
 const Links: {
     name: string;
@@ -43,7 +44,7 @@ const NavLink = ({ link }: { link: typeof Links[0] }) => (
     </Link>
 );
 
-const NavUser = ({ user }: { user: firebase.default.User }) => {
+const NavUser = ({ user }: { user: User }) => {
     // user logged in
     return user ? (
         <>

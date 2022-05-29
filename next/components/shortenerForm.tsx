@@ -23,20 +23,20 @@ const ShortenerForm = () => {
 
     const validationSchema = Yup.object({
         dest: Yup.string().required("Missing url").url("Not a valid url"),
-        code: Yup.string()
-            .matches(
-                /^[\w\d\.]{3,32}$/,
-                "Custom code must be between 3 and 32 letters, numbers and dots."
-            )
-            .nullable(),
+        code: Yup.string().matches(
+            /^[\w\d\.]{3,32}$/,
+            "Custom code must be between 3 and 32 letters, numbers and dots."
+        ),
     });
 
     const initialValues = {
         dest: query.url || "",
-        code: query.code || null,
+        code: query.code || "",
     };
 
-    const onSubmit = async (values: any, actions: FormikHelpers<any>) => {
+    const onSubmit = async (_values: any, actions: FormikHelpers<any>) => {
+        const values = { ..._values };
+        values.code ||= null;
         console.info(values);
 
         const res = await newLink(values);
@@ -96,19 +96,17 @@ const ShortenerForm = () => {
 
         toast({
             status: "success",
-            title: "Link created!",
-            description: (
-                <Link href={data.url} target="_blank">
-                    {data.url}
-                </Link>
-            ),
             render: function ({ onClose, id }) {
                 return (
                     <ButtonToast
                         status="success"
                         variant="solid"
-                        title={this.title}
-                        description={this.description}
+                        title="Link created!"
+                        description={
+                            <Link href={data.url} target="_blank">
+                                {data.url}
+                            </Link>
+                        }
                         isClosable
                         onClose={onClose}
                         id={id}

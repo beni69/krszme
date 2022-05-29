@@ -6,8 +6,7 @@ const config = {
     pwa: {
         dest: "public",
     },
-
-    webpack5: true,
+    swcMinify: true,
 };
 
 module.exports = PROD ? withPWA(config) : config;

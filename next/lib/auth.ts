@@ -1,12 +1,18 @@
-import firebase from "firebase/app";
-import "firebase/auth";
+import {
+    getAuth,
+    User,
+    GithubAuthProvider,
+    GoogleAuthProvider,
+    FacebookAuthProvider,
+    TwitterAuthProvider,
+} from "firebase/auth";
 import type { auth as uiAuth } from "firebaseui";
 import router from "next/router";
 import { createContext } from "react";
 import app from "./firebase";
 export { default as withAuth } from "../components/HOC/withAuth";
 
-export const auth = app.auth();
+export const auth = getAuth(app);
 
 export const getUser = () => USER;
 
@@ -33,7 +39,7 @@ export const signOut = () => {
     });
 };
 
-let USER: firebase.User = undefined;
+let USER: User = undefined;
 
 auth.onAuthStateChanged(async u => {
     USER = u;
@@ -45,24 +51,24 @@ auth.onAuthStateChanged(async u => {
     }
 });
 
-export const AuthContext = createContext<firebase.User>(auth.currentUser);
+export const AuthContext = createContext<User>(auth.currentUser);
 
 export const uiConfig: uiAuth.Config = {
     signInOptions: [
         {
-            provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            provider: GoogleAuthProvider.PROVIDER_ID,
             scopes: ["profile", "email"],
         },
         {
-            provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+            provider: FacebookAuthProvider.PROVIDER_ID,
             scopes: ["public_profile", "email"],
         },
-        firebase.auth.GithubAuthProvider.PROVIDER_ID,
-        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+        GithubAuthProvider.PROVIDER_ID,
+        TwitterAuthProvider.PROVIDER_ID,
         // {
-        //     provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        //     provider: EmailAuthProvider.PROVIDER_ID,
         //     signInMethod:
-        //         firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD,
+        //         EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD,
         // },
     ],
     signInFlow: "redirect",

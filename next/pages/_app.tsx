@@ -11,13 +11,14 @@ import auth, { AuthContext } from "../lib/auth";
 import theme from "../lib/theme";
 import "../styles/globals.css";
 import PlausibleProvider from "next-plausible";
+import type { User } from "firebase/auth";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
     const PROD = process.env.NODE_ENV === "production";
     if (typeof window !== "undefined") console.log({ PROD });
 
     const router = useRouter();
-    const [user, setUser] = useState<firebase.default.User>(undefined);
+    const [user, setUser] = useState<User>(undefined);
     auth.onAuthStateChanged(setUser);
     const footerHeight = ["8rem", null, "3.5rem"];
     const navRef = useRef(null);
