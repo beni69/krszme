@@ -23,15 +23,17 @@ const ShortenerForm = () => {
 
     const validationSchema = Yup.object({
         dest: Yup.string().required("Missing url").url("Not a valid url"),
-        code: Yup.string().matches(
-            /^[\w\d\.]{3,32}$/,
-            "Custom code must be between 3 and 32 letters, numbers and dots."
-        ),
+        code: Yup.string()
+            .matches(
+                /^[\w\d\.]{3,32}$/,
+                "Custom code must be between 3 and 32 letters, numbers and dots."
+            )
+            .nullable(),
     });
 
     const initialValues = {
         dest: query.url || "",
-        code: query.code || "",
+        code: query.code || null,
     };
 
     const onSubmit = async (values: any, actions: FormikHelpers<any>) => {
