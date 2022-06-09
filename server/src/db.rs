@@ -10,7 +10,7 @@ use std::sync::Mutex;
 pub type MongoClient = web::Data<Mutex<Client>>;
 
 lazy_static::lazy_static! {
-    static ref DB_NAME: String = std::env::var("DB_NAME").unwrap_or("krszme".into());
+    static ref DB_NAME: String = std::env::var("DB_NAME").unwrap_or_else(|_| "krszme".into());
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,11 +41,8 @@ pub struct LinkTiny {
 
 macro_rules! collection {
     ($client:expr) => {{
-        $client
-            .lock()
-            .unwrap()
-            .database(&DB_NAME)
-            .collection::<Link>("urls")
+        let db = $client.lock().unwrap().database(&DB_NAME);
+        db.collection::<Link>("urls")
     }};
 }
 

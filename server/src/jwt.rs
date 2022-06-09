@@ -1,7 +1,7 @@
 use actix_web::{http::header, HttpRequest};
 use anyhow::{anyhow, Result};
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
-use reqwest;
+use reqwest::get;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, env, str::FromStr};
 
@@ -41,7 +41,7 @@ pub async fn verify(token: &str) -> Result<User> {
     v.set_audience(&[&conf.audience]);
     v.set_issuer(&[&conf.issuer]);
     let user = decode::<User>(
-        &token,
+        token,
         &DecodingKey::from_rsa_components(&key.n, &key.e)?,
         &v,
     );
@@ -69,9 +69,9 @@ pub async fn auth_optional(req: &HttpRequest) -> Option<User> {
         Some(x) => x,
         None => return None,
     };
-    match verify(&jwt).await {
+    match verify(jwt).await {
         Ok(u) => Some(u),
-        Err(_) => return None,
+        Err(_) => None,
     }
 }
 
@@ -92,7 +92,7 @@ pub struct JwkConfig {
     pub issuer: String,
 }
 fn env_or_default(key: &str, default: &str) -> String {
-    env::var(key).unwrap_or(default.into())
+    env::var(key).unwrap_or_else(|_| default.into())
 }
 pub fn get_jwk_conf() -> JwkConfig {
     JwkConfig {
@@ -118,7 +118,7 @@ struct KeyResponse {
 
 async fn fetch_jwk(kid: &str) -> Result<JwkKey> {
     let jwk_conf = get_jwk_conf();
-    let res = reqwest::get(&jwk_conf.jwk_url).await?;
+    let res = get(&jwk_conf.jwk_url).await?;
     debug!("status: {}", res.status());
     let body = res.json::<KeyResponse>().await?;
     match body.keys.iter().find(|k| k.kid == kid) {

@@ -20,7 +20,7 @@ use std::{env, sync::Mutex};
 #[get("/")]
 async fn index() -> impl Responder {
     HttpResponse::PermanentRedirect()
-        .append_header(("location", "//app.krsz.me"))
+        .append_header(("location", "https://app.krsz.me"))
         .finish()
 }
 
@@ -75,7 +75,7 @@ async fn delete_url_code(
         Err(_) => return Err(ApiError::NotFound),
     };
     if link.user_id.is_some() && user.user_id == link.user_id.clone().unwrap() {
-        if let Err(_) = delete_link(&client, &code).await {
+        if (delete_link(&client, &code).await).is_err() {
             return Err(ApiError::InternalServerError);
         }
         Ok(HttpResponse::Ok().json(link.json()))
@@ -153,7 +153,7 @@ async fn with_code(client: MongoClient, code: web::Path<String>) -> impl Respond
         Ok(link) => link,
         Err(_) => {
             return HttpResponse::PermanentRedirect()
-                .append_header(("location", "//app.krsz.me/linknotfound"))
+                .append_header(("location", "https://app.krsz.me/linknotfound"))
                 .finish()
         }
     };
@@ -182,14 +182,14 @@ const CODE_LENGTH: usize = 5;
 lazy_static::lazy_static! {
     static ref CODE_RE: Regex = Regex::new(r"^[\w\d\.]{3,32}$").unwrap();
     static ref URL_RE: Regex = Regex::new(r"^(https?://(?:[[:alnum:]]+\.)?[[:alnum:]]+\.com)(/\S*)?$").unwrap();
-    static ref BASE_URL: String = env::var("BASE_URL").unwrap_or("https://krsz.me".into());
+    static ref BASE_URL: String = env::var("BASE_URL").unwrap_or_else(|_| "https://krsz.me".into());
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     logger::init_log(Some("actix_web=info,krszme_server=debug"));
     let port: u16 = env::var("PORT")
-        .unwrap_or(DEFAULT_PORT.to_string())
+        .unwrap_or_else(|_| DEFAULT_PORT.to_string())
         .parse()
         .unwrap_or(DEFAULT_PORT);
     let conn_str = env::var("MONGODB").expect("MONGODB must be set");
@@ -199,7 +199,7 @@ async fn main() -> std::io::Result<()> {
 
     {
         info!("Starting server: http://localhost:{port}");
-        let client = client.lock().unwrap();
+        let client = client.lock().unwrap().clone();
         info!(
             "Connected to MongoDB: {:?}",
             client.list_database_names(None, None).await.unwrap()
