@@ -7,5 +7,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 USER node
 # install google cloud sdk
 RUN curl https://sdk.cloud.google.com | bash -s -- --disable-prompts && \
+    # add google cloud sdk to PATH 
+    mkdir -vp $HOME/.local/bin && ln -s $HOME/google-cloud-sdk/bin/* $HOME/.local/bin/ && \
     # install pnpm
     npm i -g pnpm
