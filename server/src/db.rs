@@ -27,7 +27,11 @@ pub struct Link {
 impl Link {
     pub fn json(&self) -> serde_json::Value {
         let mut v = serde_json::to_value(self).unwrap();
-        v["timestamp"] = serde_json::Value::String(self.timestamp.to_rfc3339_string());
+        v["timestamp"] = serde_json::Value::String(
+            self.timestamp
+                .try_to_rfc3339_string()
+                .expect("Failed to convert timestamp to RFC3339"),
+        );
         v
     }
 }
