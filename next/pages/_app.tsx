@@ -31,7 +31,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
             <PlausibleProvider
                 domain="app.krsz.me"
-                customDomain="https://analytics.karesz.xyz"
+                customDomain="https://plausible.vbeni.dev"
                 selfHosted>
                 {/* chakra ui */}
                 <ChakraProvider theme={theme}>
