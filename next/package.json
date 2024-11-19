@@ -17,7 +17,7 @@
         "@chakra-ui/react": "^2.1.2",
         "@emotion/react": "^11",
         "@emotion/styled": "^11",
-        "firebase": "^9.8.2",
+        "firebase": "^10.9.0",
         "formik": "^2.2.9",
         "formik-chakra-ui": "^1.6.0",
         "framer-motion": "^6",
